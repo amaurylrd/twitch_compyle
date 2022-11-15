@@ -1,2 +1,2 @@
-[tool.poetry.virtualenvs]
+[virtualenvs]
 in-project = true
