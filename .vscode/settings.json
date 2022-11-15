@@ -1,0 +1,34 @@
+{
+    "python.pythonPath": ".venv/bin/python",
+    "files.autoSave": "onFocusChange",
+    "python.terminal.activateEnvironment": true,
+    "python.terminal.activateEnvInCurrentTerminal": true,
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.matchBrackets": "always",
+        "editor.inlineSuggest.enabled": true,
+    },
+    "python.linting.enabled": true,
+    "python.linting.lintOnSave": true,
+    "python.linting.pylintPath": ".venv/bin/pylint",
+    "python.linting.pylintEnabled": true,
+    "python.linting.pylintArgs": [
+        "--disable=missing-module-docstring,missing-function-docstring,missing-class-docstring",
+        "--ignore-patterns=(.)*_test.py,test_(.)*.py",
+        "--max-line-length=120"
+    ],
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportMissingImports": "none"
+    },
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": [
+        "--exclude",
+        "((.git|.venv|.tox|migrations))",
+        "--include",
+        ".pyi?$",
+        "--line-length",
+        "120"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}
