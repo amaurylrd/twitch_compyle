@@ -1,4 +1,5 @@
 from collections.abc import Iterable
+from functools import wraps
 from typing import Optional, Set
 from urllib.parse import urlencode, urlparse, urlunparse
 
@@ -107,6 +108,17 @@ class Router:
 
         self.__routes[namespace] = endpoint
 
+    def is_registered(self, namespace: str) -> bool:
+        """Tells if the specified namespace is in the dictionary.
+
+        Args:
+            namespace (str): the namespace to be tested.
+
+        Returns:
+            bool: `True` if namespace is present, `False` otherwise.
+        """
+        return namespace in self.__routes
+
     def route(self, namespace: str, *args) -> Optional[str]:
         """Gets the route for the specified namespace if it is present, else None.
 
@@ -131,6 +143,25 @@ class Router:
             return url[:-1]
 
         return url
+
+
+def url_request(method, namespace: str):
+    class DecoratorError(Exception):
+        pass
+
+    @wraps(method)
+    def _wrapper(self, *args, **kwargs):
+        attribute = getattr(self, "router")
+
+        if not (attribute and isinstance(attribute, Router) and attribute.is_registered(namespace)):
+            raise ValueError("This decorator is designed to be placed to fast access router attribute")
+
+        return method(self, *args, **kwargs)
+
+    try:
+        return _wrapper
+    except Exception as exception:
+        raise DecoratorError() from exception
 
 
 # pylint: disable=too-few-public-methods
