@@ -55,9 +55,9 @@ class Endpoint:
         """Builds the url for the specified queryset.
 
         Example:
-            >> endpt = Endpoint("https://api.twitch.tv/helix", "/token", req=["client_id", "client_secret", "grant_type"])
-            >> url = endpt.build_url(client_id="hof5gwx0su6owfnys0yan9c87zr6t", client_secret="41vpdji4e9gif29md0ouet6fktd2", grant_type="client_credentials")
-            >> "https://api.twitch.tv/helix/token?client_id=hof5gwx0su6owfnys0yan9c87zr6t&client_secret=41vpdji4e9gif29md0ouet6fktd2&grant_type=client_credentials
+            >>> endpt = Endpoint("https://api.twitch.tv/helix", "/token", req=["client_id", "client_secret", "grant_type"])
+            >>> url = endpt.build_url(client_id="hof5gwx0su6owfnys0yan9c87zr6t", client_secret="41vpdji4e9gif29md0ouet6fktd2", grant_type="client_credentials")
+            >>> "https://api.twitch.tv/helix/token?client_id=hof5gwx0su6owfnys0yan9c87zr6t&client_secret=41vpdji4e9gif29md0ouet6fktd2&grant_type=client_credentials
 
         Args:
             **query (dict): the parameters of the query.
@@ -84,7 +84,7 @@ class Endpoint:
 
 
 class Router:
-    def __init__(self, trailing_slash=True):
+    def __init__(self, *, trailing_slash=True):
         self.__routes = {}
         self.__trailing_slash = trailing_slash
 
@@ -131,3 +131,12 @@ class Router:
             return url[:-1]
 
         return url
+
+
+# pylint: disable=too-few-public-methods
+class Routable:
+    __router = Router(trailing_slash=False)
+
+    @property
+    def router(self):
+        return self.__router
