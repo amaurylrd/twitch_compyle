@@ -12,7 +12,7 @@ def deserialize_token(path: str) -> Any:
         Any: the token as JSON object.
     """
     if path:
-        with open(path, mode="r") as token_file:
+        with open(path, "r", encoding="utf8") as token_file:
             return json.load(token_file)
 
 
@@ -24,5 +24,5 @@ def serialize_token(path: str, token_object: Dict[str, Any] = None):
         token_object (Dict[str, Any]): the object to be saved.
     """
     if path and token_object:
-        with open(path, mode="w") as token_file:
+        with open(path, "w", encoding="utf8") as token_file:
             json.dump(token_object, token_file)
