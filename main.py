@@ -1,5 +1,5 @@
-from twitch_compyle.api.twitch import TwitchAPI
-from twitch_compyle.preloader import launch_after_preload
+from compyle.api.twitch import TwitchAPI
+from compyle.preloader import launch_after_preload
 
 import os
 import os.path
@@ -62,7 +62,7 @@ def main():
         file_path = os.path.join(dir_path, file)
 
         if os.path.isfile(file_path) and file.endswith(".mp4"):
-            videoclip = VideoFileClip(file_path)
+            videoclip = VideoFileClip(file_path).fx(afx.audio_normalize)
 
             textclip: TextClip = TextClip(txt=file, color="white", fontsize=30)
             textclip: TextClip = textclip.set_duration(videoclip.duration)
