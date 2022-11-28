@@ -119,11 +119,13 @@ class TwitchAPI:
         slug = "/clips"
         url = HELIX_URL + slug  # todo routes url method qui merge base_url and slug
 
+        started_at = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)
+        ended_at = datetime.datetime.now(datetime.timezone.utc)
         params = {
             "game_id": game_id,
             "first": limit,
-            "started_at": (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)).isoformat(),
-            "ended_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "started_at": started_at.astimezone().isoformat(),
+            "ended_at": ended_at.astimezone().isoformat(),
         }
         headers = {
             "Accept": "application/vnd.twitchtv.v5+json",
@@ -132,24 +134,22 @@ class TwitchAPI:
         }
 
         response = requests.get(url, params=params, headers=headers, timeout=None)
-        response_json = response.json()  # sorted descending by views
 
+        if response.status_code != status.HTTP_200_OK:
+            return None
+
+        response_json = response.json()  # sorted descending by views
         result = response_json["data"]
 
         while limit > len(response_json["data"]) and response_json["pagination"]:
-            print(response_json["pagination"])
-            # if response.status_code == status.HTTP_200_OK:
-            #    return response.json()["data"]
-
             params["after"] = response_json["pagination"]["cursor"]
             response = requests.get(url, params=params, headers=headers, timeout=None)
             response_json = response.json()
-            print(len(response_json["data"]))
             result += response_json["data"]
 
-        result.sort(key=lambda x: x["view_count"], reverse=True)
-        print(len(result))
-        exit()
+        # result.sort(key=lambda x: x["view_count"], reverse=True)
+        # todo faire un tri convenable
+
         return result
 
         # if clip["language"] == "fr":

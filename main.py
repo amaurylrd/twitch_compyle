@@ -19,19 +19,24 @@ def main():
         shutil.rmtree(dir_path)
     os.mkdir(dir_path)
 
+    streamers = []
     for game in games:
         if game["name"] != "League of Legends":
             continue
 
         clips = twitch_api.get_games_clips(game["id"])
+
         # clips.sort(key=lambda clip: clip["created_at"], reverse=True)
-        print(len(clips))
+
         i = 0
         for clip in clips:
-            print(clip["title"], clip["created_at"], clip["view_count"])
+            if clip["language"] == "fr":
+                streamers.append(clip["broadcaster_name"])
+            continue
+            # print(clip["title"], clip["created_at"], clip["view_count"])
 
-            if i >= 10:
-                break
+            # if i >= 1:
+            #     break
 
             if clip["language"] not in ["fr"] or clip["duration"] > 25:
                 continue
@@ -57,7 +62,18 @@ def main():
         file_path = os.path.join(dir_path, file)
 
         if os.path.isfile(file_path) and file.endswith(".mp4"):
-            videoclips.append(VideoFileClip(file_path))
+            videoclip = VideoFileClip(file_path)
+
+            textclip: TextClip = TextClip(txt=file, color="white", fontsize=30)
+            textclip: TextClip = textclip.set_duration(videoclip.duration)
+            textclip: TextClip = textclip.set_position(("left", "top"))
+            textclip = textclip.on_color(color=(145, 70, 255))
+            # .set_start(0.5)
+            compositeclip = CompositeVideoClip([videoclip, textclip])
+            print(compositeclip, compositeclip.duration)
+            videoclips.append(compositeclip)
+
+    print(len(clips), streamers)
 
     if videoclips:
         # random.shuffle(audioclips)
@@ -68,7 +84,8 @@ def main():
             fps=24,
             codec="libx264",
         )
-        print(len(videoclips), len(clips))
+        print("done")
+    print("pas done")
 
 
 if __name__ == "__main__":
