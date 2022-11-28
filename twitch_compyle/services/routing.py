@@ -1,5 +1,6 @@
+# pylint: disable=line-too-long
+
 from collections.abc import Iterable
-from functools import wraps
 from typing import Optional, Set
 from urllib.parse import urlencode, urlparse, urlunparse
 
@@ -9,7 +10,7 @@ class Endpoint:
         def validate_urls(*args):
             for arg in args:
                 if not isinstance(arg, str):
-                    raise TypeError(f"string excpected, wrong type provided, found {type(arg)}")
+                    raise TypeError(f"String excpected, wrong type provided, found {type(arg)}")
 
             return args
 
@@ -23,14 +24,14 @@ class Endpoint:
                     args[i] = set()
                 else:
                     if not isinstance(arg, Iterable):
-                        raise TypeError(f"iterable excpected, wrong type provided, found {type(arg)}")
+                        raise TypeError(f"Iterable excpected, wrong type provided, found {type(arg)}")
 
                     if arg and not all(isinstance(item, str) for item in arg):
-                        raise TypeError("iterable of strings excpected, wrong type provided")
+                        raise TypeError("Iterable of strings excpected, wrong type provided")
                     args[i] = set(arg)
 
             if any(arg for arg in args) and set.intersection(*args):
-                raise ValueError("required and optional parameters must be disjoint")
+                raise ValueError("Required and optional parameters must be disjoint")
 
             return args
 
@@ -72,13 +73,13 @@ class Endpoint:
         noramlized = {k: query[k] for k in self.required_params | self.optional_params if k in query and query[k]}
 
         if len(noramlized) < len(self.required_params):
-            raise ValueError(f"Missing at least one required parameter in {self.required_params}")
+            raise ValueError(f"Missing at least one required non-null parameter in {self.required_params}")
 
         if not all(param in noramlized for param in self.required_params):
-            raise ValueError(f"Missing required parameters in {self.required_params.difference(noramlized)}")
+            raise ValueError(f"Missing required non-null parameters in {self.required_params.difference(noramlized)}")
 
-        components = list(urlparse(self.base_url))
-        components[2] = self.slug_url
+        components = list(urlparse(self.base_url, allow_fragments=False))
+        components[2] += self.slug_url
         components[4] = urlencode(noramlized)
 
         return urlunparse(components)
@@ -88,6 +89,9 @@ class Router:
     def __init__(self, *, trailing_slash=True):
         self.__routes = {}
         self.__trailing_slash = trailing_slash
+
+    def __str__(self):
+        return str(self.__routes)
 
     def register(self, namespace: str, endpoint: Endpoint):
         """Registers the specified endpoint at the specified namespace.
@@ -104,7 +108,7 @@ class Router:
             ValueError: if the specified Endpoint is null.
         """
         if not endpoint:
-            raise ValueError("specified Endpoint must not be null")
+            raise ValueError("The specified Endpoint must not be null")
 
         self.__routes[namespace] = endpoint
 
@@ -119,7 +123,7 @@ class Router:
         """
         return namespace in self.__routes
 
-    def route(self, namespace: str, *args) -> Optional[str]:
+    def route(self, namespace: str, **query) -> Optional[str]:
         """Gets the route for the specified namespace if it is present, else None.
 
         See:
@@ -127,14 +131,17 @@ class Router:
 
         Args:
             namespace (str): the namespace to be fetched.
+            **query (dict): the parameters of the query.
 
         Returns:
             Optional[str]: the resulting url or None if namespace is absent of the dictionary.
         """
-        if not (endpoint := self.__routes.get(namespace)):
+        endpoint: Endpoint = self.__routes.get(namespace)
+
+        if not endpoint:
             return None
 
-        url = endpoint.build_url(*args)
+        url = endpoint.build_url(**query)
 
         if self.__trailing_slash and url[-1] != "/":
             return url + "/"
@@ -143,25 +150,6 @@ class Router:
             return url[:-1]
 
         return url
-
-
-def url_request(method, namespace: str):
-    class DecoratorError(Exception):
-        pass
-
-    @wraps(method)
-    def _wrapper(self, *args, **kwargs):
-        attribute = getattr(self, "router")
-
-        if not (attribute and isinstance(attribute, Router) and attribute.is_registered(namespace)):
-            raise ValueError("This decorator is designed to be placed to fast access router attribute")
-
-        return method(self, *args, **kwargs)
-
-    try:
-        return _wrapper
-    except Exception as exception:
-        raise DecoratorError() from exception
 
 
 # pylint: disable=too-few-public-methods
