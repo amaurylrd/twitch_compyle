@@ -1,6 +1,11 @@
 from functools import wraps
 
 
+class DecoratorError(Exception):
+    def __init__(self):
+        super().__init__("An error occurred while handling the decorating of the function")
+
+
 def default_kwargs(**defaults):
     def _decorator(func):
         @wraps(func)
@@ -11,8 +16,3 @@ def default_kwargs(**defaults):
         return _wrapper
 
     return _decorator
-
-
-class DecoratorError(Exception):
-    def __init__(self):
-        super().__init__("An error occurred while handling the decorating of the function")

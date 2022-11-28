@@ -1,8 +1,12 @@
-# pylint: disable=line-too-long
+# pylint: disable=line-too-long, too-few-public-methods, unbalanced-tuple-unpacking
 
 from collections.abc import Iterable
-from typing import Optional, Set
+from typing import Any, Optional, Set
 from urllib.parse import urlencode, urlparse, urlunparse
+
+import requests
+
+from compyle.utils.enums import Enum
 
 
 class Endpoint:
@@ -16,7 +20,6 @@ class Endpoint:
 
         self.__base_url, self.__slug = validate_urls(base_url, slug)
 
-        # pylint: disable=unbalanced-tuple-unpacking
         def validate_params(*args):
             args = [*args]
             for i, arg in enumerate(args):
@@ -85,6 +88,20 @@ class Endpoint:
         return urlunparse(components)
 
 
+class Method(Enum):
+    GET, POST, PUT, PATCH, DELETE = range(5)
+
+    @property
+    def func(self):
+        return getattr(requests, self.name.lower())
+
+    def __call__(self, *args, **kwargs):
+        return self.func(*args, **kwargs)
+
+    def __repr__(self):
+        return self.func.__repr__()
+
+
 class Router:
     def __init__(self, *, trailing_slash=True):
         self.__routes = {}
@@ -136,12 +153,11 @@ class Router:
         Returns:
             Optional[str]: the resulting url or None if namespace is absent of the dictionary.
         """
-        endpoint: Endpoint = self.__routes.get(namespace)
-
-        if not endpoint:
+        if namespace not in self.__routes:
             return None
 
-        url = endpoint.build_url(**query)
+        endpoint: Endpoint = self.__routes.get(namespace)
+        url: str = endpoint.build_url(**query)
 
         if self.__trailing_slash and url[-1] != "/":
             return url + "/"
@@ -151,8 +167,36 @@ class Router:
 
         return url
 
+    def request(self, method: str, namespace: str, header: dict, **params) -> Any:
+        """Requests the specified url with the specified HTTP method and query parameters.
 
-# pylint: disable=too-few-public-methods
+        Args:
+            method (str): the HTTP method to be used.
+            namespace (str): the namespace to be fetched.
+            header (dict): the header to be used for the HTTP request.
+
+        Raises:
+            ValueError: if the specified method in not a valid HTTP method.
+            ValueError: if the specified namespace is not registered.
+            requests.HTTPError: if the HTTP request fails.
+
+        Returns:
+            Any: the json-encoded content of the response.
+        """
+        if method not in Method.__members__:
+            raise ValueError(f"Invalid method {method}, expected one of {Method.__keys__}")
+
+        if namespace not in self.__routes:
+            raise ValueError("The specified route is not registered")
+
+        url: str = self.route(namespace, **params)
+        response: requests.Response = Method[method](url, headers=header, timeout=None)
+
+        response.raise_for_status()
+
+        return response.json()
+
+
 class Routable:
     __router = Router(trailing_slash=False)
 
