@@ -1,5 +1,8 @@
 # pylint: disable=line-too-long, too-few-public-methods, unbalanced-tuple-unpacking
 
+from abc import ABC
+import logging
+import time
 from collections.abc import Iterable
 from typing import Any, Optional, Set
 from urllib.parse import urlencode, urlparse, urlunparse
@@ -167,22 +170,26 @@ class Router:
 
         return url
 
-    def request(self, method: str, namespace: str, header: dict, **params) -> Any:
+    def request(self, method: str, namespace: str, header: dict, *, json=True, **params) -> Any:
         """Requests the specified url with the specified HTTP method and query parameters.
 
         Args:
             method (str): the HTTP method to be used.
             namespace (str): the namespace to be fetched.
+            json (bool): if the response is decoded to json
             header (dict): the header to be used for the HTTP request.
 
         Raises:
             ValueError: if the specified method in not a valid HTTP method.
             ValueError: if the specified namespace is not registered.
-            requests.HTTPError: if the HTTP request fails.
+            requests.exceptions.HTTPError: if the HTTP request fails.
+            requests.exceptions.JSONDecodeError: if the response is not json valid.
 
         Returns:
-            Any: the json-encoded content of the response.
+            Any: the response or the json-encoded content if the option is specified
         """
+        logger = logging.getLogger(__name__)
+
         if method not in Method.__members__:
             raise ValueError(f"Invalid method {method}, expected one of {Method.__keys__}")
 
@@ -192,12 +199,29 @@ class Router:
         url: str = self.route(namespace, **params)
         response: requests.Response = Method[method](url, headers=header, timeout=None)
 
+        logger.debug("Request %s %s, respond with %s", method, namespace, response.status_code)
+
+        backoff: float = 0.5  # in seconds
+        max_retries: int = 3
+
+        while response.status_code >= 500 and max_retries > 0:
+            logger.debug("The request failed number of retries left: %s", max_retries)
+            logger.debug("The backoff delay has been set to %.2s seconds", backoff)
+
+            time.sleep(backoff)
+            response: requests.Response = Method[method](url, headers=header, timeout=None)
+
+            logger.debug("Request %s %s, respond with %s", method, namespace, response.status_code)
+
+            backoff *= 2
+            max_retries -= 1
+
         response.raise_for_status()
 
-        return response.json()
+        return response.json() if json else response
 
 
-class Routable:
+class Routable(ABC):
     __router = Router(trailing_slash=False)
 
     @property
