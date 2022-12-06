@@ -1,15 +1,19 @@
 # pylint: disable=line-too-long, too-few-public-methods, unbalanced-tuple-unpacking
 
-from abc import ABC
 import logging
 import time
+from abc import ABC
 from collections.abc import Iterable
+from datetime import datetime
 from typing import Any, Optional, Set
 from urllib.parse import urlencode, urlparse, urlunparse
 
 import requests
+from rest_framework import status
 
 from compyle.utils.enums import Enum
+
+LOGGER = logging.getLogger(__name__)
 
 
 class Endpoint:
@@ -45,18 +49,38 @@ class Endpoint:
 
     @property
     def base_url(self) -> str:
+        """Getter to access the base of the request url.
+
+        Returns:
+            str: the base of the url.
+        """
         return self.__base_url
 
     @property
     def slug_url(self) -> str:
+        """Getter to access the slug attribute of the request url.
+
+        Returns:
+            str: the slug of the url.
+        """
         return self.__slug
 
     @property
     def required_params(self) -> Set[str]:
+        """Getter to access the required parameters specified at the creation.
+
+        Returns:
+            Set[str]: the set of required parameters, or an empty set if none were specified.
+        """
         return self.__required_params
 
     @property
     def optional_params(self) -> Set[str]:
+        """Getter to access the optional parameters specified at the creation.
+
+        Returns:
+            Set[str]: the set of optional parameters, or an empty set if none were specified..
+        """
         return self.__optional_params
 
     def build_url(self, **query) -> str:
@@ -92,10 +116,15 @@ class Endpoint:
 
 
 class Method(Enum):
-    GET, POST, PUT, PATCH, DELETE = range(5)
+    GET, POST, PUT, PATCH, DELETE, HEAD = range(6)
 
     @property
     def func(self):
+        """Retrieve the partial function from its enum name.
+
+        Returns:
+            function: the function callable if the attribute exists, raises an error otherwise.
+        """
         return getattr(requests, self.name.lower())
 
     def __call__(self, *args, **kwargs):
@@ -125,10 +154,14 @@ class Router:
             endpoint (Endpoint): the value paired to this key.
 
         Raises:
-            ValueError: if the specified Endpoint is null.
+            ValueError: if the specified namespace is empty or mistyped.
+            ValueError: if the specified endpoint is null or mistyped.
         """
-        if not endpoint:
-            raise ValueError("The specified Endpoint must not be null")
+        if not isinstance(namespace, str) or not namespace.strip():
+            raise ValueError("The specified namespace is malformed")
+
+        if not isinstance(endpoint, Endpoint):
+            raise ValueError("The specified endpoint is malformed")
 
         self.__routes[namespace] = endpoint
 
@@ -142,6 +175,14 @@ class Router:
             bool: `True` if namespace is present, `False` otherwise.
         """
         return namespace in self.__routes
+
+    def get_registered(self):
+        """Returns the namespace registered.
+
+        Returns:
+            dict_keys: the list of routes.
+        """
+        return self.__routes.keys()
 
     def route(self, namespace: str, **query) -> Optional[str]:
         """Gets the route for the specified namespace if it is present, else None.
@@ -159,7 +200,7 @@ class Router:
         if namespace not in self.__routes:
             return None
 
-        endpoint: Endpoint = self.__routes.get(namespace)
+        endpoint: Endpoint = self.__routes[namespace]
         url: str = endpoint.build_url(**query)
 
         if self.__trailing_slash and url[-1] != "/":
@@ -176,8 +217,9 @@ class Router:
         Args:
             method (str): the HTTP method to be used.
             namespace (str): the namespace to be fetched.
-            json (bool): if the response is decoded to json
             header (dict): the header to be used for the HTTP request.
+            json (bool): if the response is decoded to json.
+            paramas (dict): the parameters of the query.
 
         Raises:
             ValueError: if the specified method in not a valid HTTP method.
@@ -186,10 +228,8 @@ class Router:
             requests.exceptions.JSONDecodeError: if the response is not json valid.
 
         Returns:
-            Any: the response or the json-encoded content if the option is specified
+            Any: the response or the json-encoded content if the option is specified.
         """
-        logger = logging.getLogger(__name__)
-
         if method not in Method.__members__:
             raise ValueError(f"Invalid method {method}, expected one of {Method.__keys__}")
 
@@ -199,22 +239,50 @@ class Router:
         url: str = self.route(namespace, **params)
         response: requests.Response = Method[method](url, headers=header, timeout=None)
 
-        logger.debug("Request %s %s, respond with %s", method, namespace, response.status_code)
+        LOGGER.debug(
+            "Request %s %s, respond with %s in %.3fs",
+            method,
+            namespace,
+            response.status_code,
+            response.elapsed.total_seconds(),
+        )
 
         backoff: float = 0.5  # in seconds
         max_retries: int = 3
 
         while response.status_code >= 500 and max_retries > 0:
-            logger.debug("The request failed number of retries left: %s", max_retries)
-            logger.debug("The backoff delay has been set to %.2s seconds", backoff)
+            LOGGER.debug("The request failed number of retries left: %s", max_retries)
+            LOGGER.debug("The backoff delay has been set to %.2s seconds", backoff)
+
+            if response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE:
+                LOGGER.debug(
+                    "You may check the Twitch API status page (%s) for relevant updates and details on health and incidents.",
+                    "https://devstatus.twitch.tv/",
+                )
 
             time.sleep(backoff)
             response: requests.Response = Method[method](url, headers=header, timeout=None)
 
-            logger.debug("Request %s %s, respond with %s", method, namespace, response.status_code)
+            LOGGER.debug(
+                "Request %s %s, respond with %s in %.3fs",
+                method,
+                namespace,
+                response.status_code,
+                response.elapsed.total_seconds(),
+            )
 
             backoff *= 2
             max_retries -= 1
+
+        if response.status_code == status.HTTP_429_TOO_MANY_REQUESTS:
+            epoch_timestamp = response.headers["Ratelimit-Reset"]
+            reset = datetime.fromtimestamp(epoch_timestamp)
+            delta = reset - datetime.now()
+
+            LOGGER.debug(
+                "The bucket runs out of points within the last minute, it will be reset to full under %f",
+                delta.total_seconds(),
+            )
 
         response.raise_for_status()
 
@@ -224,6 +292,19 @@ class Router:
 class Routable(ABC):
     __router = Router(trailing_slash=False)
 
+    def __init__(self, routes: dict):
+        for route, params in routes.items():
+            self.router.register(route, Endpoint(**params))
+
     @property
     def router(self):
+        """Getter to access the router.
+
+        See:
+            :func:`~Router.register`.
+            :func:`~Router.route`.
+
+        Returns:
+            Router: the router for this instance.
+        """
         return self.__router

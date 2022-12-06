@@ -7,6 +7,7 @@ class DecoratorError(Exception):
 
 
 def default_kwargs(**defaults):
+    # todo docstring un jour ici
     def _decorator(func):
         @wraps(func)
         def _wrapper(instance, *args, **kwargs):
