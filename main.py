@@ -16,7 +16,7 @@ def main():
     api = TwitchApi()
 
     game_name = "League of Legends"
-    game_name = "VALORANT"
+    # game_name = "VALORANT"
     game_id = api.get_game_id(game_name)
     clips = api.get_game_clips(game_id)
 
@@ -28,10 +28,11 @@ def main():
     subclips_duration = 0
 
     video = None
-    description = ""
+    timestamps = ""
+    credits = set()
     remote_thumbnail = urlretrieve(clips[0]["thumbnail_url"])[0]
 
-    for clip in clips:
+    for clip in clips[:2]:
         # retrieve url and download remote file
         url = api.get_clip_url(clip)
         temporary_file, _ = urlretrieve(url)
@@ -52,16 +53,19 @@ def main():
 
         # composite clip append to subclips
         composite = CompositeVideoClip([videoclip, textclip])
-        # videoclip.crossfadein(1)
         subclips.append(composite)
 
         minutes = int(subclips_duration / 60)
         seconds = int(subclips_duration % 60)
         timestamp = f"{minutes:02d}:{seconds:02d}"
-        description += f"{timestamp} {clip['broadcaster_name']}\n"
+        timestamps += f"{timestamp} {clip['broadcaster_name']}\n"
         subclips_duration += videoclip.duration
 
-        # when to close a clip https://zulko.github.io/moviepy/getting_started/efficient_moviepy.html
+        x = "https://www.twitch.tv/" + clip["broadcaster_name"]
+        credit = f"{clip['broadcaster_name']} - {x}"
+        credits.add(credit)
+
+        # close the clip https://zulko.github.io/moviepy/getting_started/efficient_moviepy.html
         videoclip.close()
 
     if subclips:
@@ -70,18 +74,27 @@ def main():
         if os.path.exists(local_file):
             os.remove(local_file)
 
-        video: CompositeVideoClip = concatenate_videoclips(subclips, method="compose")
+        # video: CompositeVideoClip = concatenate_videoclips(subclips, method="compose", padding=-1)
+        # video.write_videofile(local_file, codec="libx264", audio_codec="aac", verbose=False)
 
         # try:
         #     import pygame
 
-        #     video.show(interactive=True)
-        # except ImportError:
-        video.write_videofile(local_file, codec="libx264", audio_codec="aac", verbose=False)
-        #     pass  # set try/catch here for jupiter notebook, and then write_videofile
-        # finally:
-        video.close()
+        #     pygame.init()
+        #     pygame.display.set_caption("Show Video on screen")
 
+        #     video.audio.fps = 44_100
+        #     video = video.resize((620, 480))
+        #     video.preview(fps=60, audio=True, audio_fps=44_100)
+
+        #     pygame.quit()
+        # except ImportError:
+
+        # #     pass  # set try/catch here for jupiter notebook, and then write_videofile
+        # # finally:
+        # # video.close()
+        description = "🎥 Credits:\n" + "\n".join(credits) + "\n\n⌚ Timestamps:\n" + timestamps
+        print(description)
     urlcleanup()
 
     # require to have Pygame
@@ -100,3 +113,5 @@ def main():
 
 if __name__ == "__main__":
     launch_after_preload(main)
+
+# youtube upload https://github.com/ClarityCoders/AutoTube/blob/master/utils/upload_video.py

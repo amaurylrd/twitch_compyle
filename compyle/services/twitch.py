@@ -217,7 +217,7 @@ class TwitchApi(Routable):
 
         clips.sort(key=lambda clip: (clip["view_count"], clip["created_at"]), reverse=True)
         logger.debug(
-            "Parsing done: %s/~%s of the clips kept in the %d last days",
+            "Parsing done, %s/~%s of the clips kept in the %d last days",
             len(clips),
             page * limit,
             max(1, period),
