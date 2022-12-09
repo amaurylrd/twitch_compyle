@@ -15,7 +15,7 @@ def launch_after_preload(method_callback, *args, **kwargs):
 
     if not config.get_setting("IMAGEMAGICK_BINARY"):
         dir = os.path.basename(os.path.dirname(__file__))
-        pass  # todo message pas bien
+        # todo message pas bien
 
     # todo si pas de .env
 
