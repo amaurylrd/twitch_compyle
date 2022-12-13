@@ -13,7 +13,12 @@ def launch_after_preload(method_callback, *args, **kwargs):
     # logging.getLogger("moviepy.editor").setLevel(logging.WARNING)
     logging.getLogger("imageio_ffmpeg").setLevel(logging.CRITICAL)
 
+    print(config.get_setting("IMAGEMAGICK_BINARY"))
+    # config.change_settings({"IMAGEMAGICK_BINARY": r"/bin/convert"})
+    # exit()
+
     if not config.get_setting("IMAGEMAGICK_BINARY"):
+        config.change_settings({"IMAGEMAGICK_BINARY": r"/bin/convert"})  # pour ubuntu
         dir = os.path.basename(os.path.dirname(__file__))
         # todo message pas bien
 
