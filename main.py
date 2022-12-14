@@ -6,6 +6,7 @@ from urllib.request import urlretrieve, urlcleanup
 from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip, concatenate_videoclips
 from moviepy.audio.fx.audio_normalize import audio_normalize
 from moviepy.video.compositing.transitions import slide_in
+from moviepy.video.fx.fadein import fadein
 from moviepy.video.fx.resize import resize
 
 from compyle.preloader import launch_after_preload
@@ -30,7 +31,12 @@ def main():
     video = None
     timestamps = ""
     credits = set()
+
     remote_thumbnail = urlretrieve(clips[0]["thumbnail_url"])[0]
+    # todo thumbnail des 4 meilleures
+
+    # todo shuffle
+    # todo break si durée au dessus de 10 minutes + historique
 
     for clip in clips[:2]:
         # retrieve url and download remote file
@@ -43,6 +49,9 @@ def main():
         videoclip = videoclip.set_fps(60)
         videoclip = videoclip.fx(resize, width=1920, height=1080)
         videoclip = audio_normalize(videoclip)
+
+        if subclips:
+            videoclip = videoclip.fx(fadein, 1)
 
         # textclip creation and initialisation
         textclip: TextClip = TextClip(clip["broadcaster_name"], fontsize=60, color="white")
@@ -74,8 +83,8 @@ def main():
         if os.path.exists(local_file):
             os.remove(local_file)
 
-        # video: CompositeVideoClip = concatenate_videoclips(subclips, method="compose", padding=-1)
-        # video.write_videofile(local_file, codec="libx264", audio_codec="aac", verbose=False)
+        video: CompositeVideoClip = concatenate_videoclips(subclips, method="compose", padding=-1)
+        video.write_videofile(local_file, codec="libx264", audio_codec="aac", verbose=False)
 
         # try:
         #     import pygame
