@@ -15,7 +15,10 @@ https://python-poetry.org/docs/#installation
 3. ImageMagick <br>
 https://imagemagick.org/script/download.php 
 
-> Once you have installed it, ImageMagick will be automatically detected by MoviePy, except for some developpers like windows users, thus make sure to check _"install legacy utilities"_ in the installation wizard. You may also set the variable _IMAGEMAGICK_BINARY_ from the moviepy/config_defaults.py file
+:warning: Once you have installed it, ImageMagick should be automatically detected by MoviePy, except for some developpers under specific OS like:
+- for **windows users**, you may also set the variable _IMAGEMAGICK_BINARY_ from the moviepy/config.py file. To avoid doing so, make sure to check _"install legacy utilities"_ in the installation wizard.
+  
+- for **ubuntu users (>= 19.04)**, you may have installed from [apt://imagemagick]() and thus you need to disable this line ``<policy domain="path" rights="none" pattern="@*"/>`` from the security policy file located at ``/etc/ImageMagick/policy.xml``.
 
 > MoviePy depends on the Python modules Numpy, imageio, Decorator, and tqdm, which will be automatically installed during MoviePy’s installation but MoviePy also need additional common libraries like PIL, FFMPEG for specific usage...
 
@@ -40,6 +43,9 @@ To setup this project, install the dependencies using poetry like so:
 poetry lock
 poetry install
 ```
+
+### TODO .env
+
 ### Run
 
 To run the project, run the following command in a poetry shell:
