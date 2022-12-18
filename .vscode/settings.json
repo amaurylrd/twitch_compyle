@@ -15,6 +15,8 @@
     "python.linting.pylintArgs": [
         "--disable=missing-module-docstring,missing-function-docstring,missing-class-docstring",
         "--ignore-patterns=(.)*_test.py,test_(.)*.py",
+        "--generated-members=cv2.*",
+        "--extension-pkg-whitelist=cv2",
         "--max-line-length=120"
     ],
     "python.analysis.diagnosticSeverityOverrides": {

@@ -190,7 +190,7 @@ class TwitchApi(Routable):
                     if (
                         clip["video_id"] != ""
                         and clip["vod_offset"] is not None
-                        and clip["language"] == "fr"
+                        and (not language or clip["language"] == language)
                         and clip["duration"] < 40
                     ):
                         if not any(
@@ -202,7 +202,7 @@ class TwitchApi(Routable):
                             clips.append(clip)
 
                 if len(clips) >= minimum_clips:
-                    logger.debug("Parsing stopped, enough clips were found (%s)", len(clips))
+                    logger.debug("Parsing stopped, enough clips were found (above %s)", minimum_clips)
                     break
 
                 if response["data"][0]["view_count"] < minimum_views:

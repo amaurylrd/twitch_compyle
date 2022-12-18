@@ -13,19 +13,20 @@ def launch_after_preload(method_callback, *args, **kwargs):
     # logging.getLogger("moviepy.editor").setLevel(logging.WARNING)
     logging.getLogger("imageio_ffmpeg").setLevel(logging.CRITICAL)
 
-    print(config.get_setting("IMAGEMAGICK_BINARY"))
+    # print(config.get_setting("IMAGEMAGICK_BINARY"))
     # config.change_settings({"IMAGEMAGICK_BINARY": r"/bin/convert"})
     # exit()
 
+    logger = logging.getLogger(__name__)
+    logger.debug("Loading credentials from %s", dotenv.find_dotenv())
+
     if not config.get_setting("IMAGEMAGICK_BINARY"):
-        config.change_settings({"IMAGEMAGICK_BINARY": r"/bin/convert"})  # pour ubuntu
+        # logger.warning("IMAGEMAGICK_BINARY not found, please install imagemagick or set IMAGEMAGICK_BINARY in .env")
+        # config.change_settings({"IMAGEMAGICK_BINARY": r"/bin/convert"})  # pour ubuntu
         dir = os.path.basename(os.path.dirname(__file__))
-        # todo message pas bien
+        # todo message pas bien warn
 
     # todo si pas de .env
-
-    logger = logging.getLogger(__name__)
-    logger.debug("Loading variables from %s", dotenv.find_dotenv())
 
     dotenv.load_dotenv()
 
