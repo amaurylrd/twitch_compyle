@@ -77,6 +77,8 @@ git push --force
 git rebase -i <hash_of_commit> or git rebase -i HEAD~4
 git push origin HEAD:<name_of_remote_branch> --force
 ```
+Make sure the topmost, first commit says “pick” and change the rest below from “pick” to “squash”. This will squash each commit into the previous commit, which will continue until every commit is squashed into the first commit.
+in git editor
 
 ## Contributing
 
