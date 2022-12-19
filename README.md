@@ -62,9 +62,20 @@ python sources/main.py
 
 In poetry shell you can run linters that are implemented as poetry dependecies like pylama, black...
 
-```py
+```sh
 black compyle/<path_to_directory_or_file>
 pylama compyle/<path_to_directory_or_file>
+```
+
+TODO git squash, 
+
+```sh
+git commit --amend
+git push --force
+```
+```sh
+git rebase -i <hash_of_commit> or git rebase -i HEAD~4
+git push origin HEAD:<name_of_remote_branch> --force
 ```
 
 ## Contributing
