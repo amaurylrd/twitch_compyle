@@ -4,3 +4,25 @@ xxx
 .env.sample
 
 etc
+
+le fichier d'ouput des log, par default sortie standard
+filename avec la date
+logging.basicConfig(level=logging.DEBUG, filename="logfile", filemode="w+", format="%(asctime)-15s %(levelname)-8s %(message)s")
+
+```bash
+DEBUG=True
+
+GMAIL_FIRSTNAME=<GMAIL_FIRSTNAME>
+GMAIL_LASTNAME=<GMAIL_LASTNAME>
+GMAIL_PASSWORD=<GMAIL_PASSWORD>
+GMAIL_USERNAME=<GMAIL_USERNAME>
+GMAIL_HOSTNAME=<GMAIL_HOSTNAME>
+
+TWITCH_USERNAME=<TWITCH_USERNAME>
+TWITCH_PASSWORD=<TWITCH_PASSWORD>
+
+TWITCH_APP_CLIENT_ID=<TWITCH_APP_CLIENT_ID>
+TWITCH_APP_CLIENT_SECRET=<TWITCH_APP_CLIENT_SECRET>
+TWITCH_APP_SLUG=<TWITCH_APP_SLUG>
+TWITCH_APP_REDIRECT_URI=<TWITCH_APP_REDIRECT_URI>
+```

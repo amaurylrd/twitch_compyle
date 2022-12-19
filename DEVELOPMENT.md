@@ -1,6 +1,4 @@
-Thank you so much for taking the time to contribute
-
-Any contributions you make are **greatly appreciated**
+🎉🎉 Thank you so much for taking the time to contribute. Any contributions you make are **greatly appreciated** 🎉🎉
 
 ## Contributing
 
@@ -9,7 +7,7 @@ Development of `twitch_compyle` happens at https://github.com/amaurylrd/twitch_c
 &rarr; For contributing to this project please contact us via GitHub or by mail <br>
 
 1. Create a new **fork** of the project
-2. Create your feature branch
+2. Create your feature **branch**
 ```sh
 git checkout -b feature/AwesomeFeature
 ```

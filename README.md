@@ -3,7 +3,7 @@
 
 ## Keywords 
 
-APIs, Twitch, Youtube, clips, video editing...
+APIs, Twitch, Youtube, MoviePy, OpenCV...
 
 ## Requierements
 
