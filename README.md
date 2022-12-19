@@ -91,9 +91,9 @@ git push origin feature/AwesomeFeature
 
 &rarr; If you have any suggestions, bug reports please report them to the issue tracker at https://github.com/amaurylrd/twitch_compyle/issues
 
-## Contact 
+## Contact
   
-Tho we like postcards, we prefer emails : [@adesvall](https://github.com/adesvall), [@amaurylrd](https://github.com/amaurylrd), [@BOOOYAA](https://github.com/BOOOYAA)
+📫 Tho we like postcards, we prefer emails : [@adesvall](https://github.com/adesvall), [@amaurylrd](https://github.com/amaurylrd), [@BOOOYAA](https://github.com/BOOOYAA)
 
 ## License
 
