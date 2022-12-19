@@ -40,7 +40,7 @@ class Endpoint:
                         raise TypeError("Iterable of strings excpected, wrong type provided")
                     args[i] = set(arg)
 
-            if any(arg for arg in args) and set.intersection(*args):
+            if any(args) and set.intersection(*args):
                 raise ValueError("Required and optional parameters must be disjoint")
 
             return args
@@ -105,7 +105,7 @@ class Endpoint:
         if len(noramlized) < len(self.required_params):
             raise ValueError(f"Missing at least one required non-null parameter in {self.required_params}")
 
-        if not all(param in noramlized for param in self.required_params):
+        if any(param not in noramlized for param in self.required_params):
             raise ValueError(f"Missing required non-null parameters in {self.required_params.difference(noramlized)}")
 
         components = list(urlparse(self.base_url, allow_fragments=False))
