@@ -18,22 +18,27 @@ https://imagemagick.org/script/download.php
 :warning: Once you have installed it, ImageMagick should be automatically detected by MoviePy, except for some developpers under specific OS like:
 - for **windows users**, you may also set the variable _IMAGEMAGICK_BINARY_ from the moviepy/config.py file. To avoid doing so, make sure to check _"install legacy utilities"_ in the installation wizard.
   
-- for **ubuntu users (>= 19.04)**, you may have installed from [apt://imagemagick]() and thus you need to disable this line ``<policy domain="path" rights="none" pattern="@*"/>`` from the security policy file located at ``/etc/ImageMagick/policy.xml``.
+- for **ubuntu users (>= 19.04)**, you may have installed from [apt://imagemagick]() or via the following command lines, then you need to disable this line ``<policy domain="path" rights="none" pattern="@*"/>`` from the security policy file located at ``/etc/ImageMagick/policy.xml``.
 
-> MoviePy depends on the Python modules Numpy, imageio, Decorator, and tqdm, which will be automatically installed during MoviePy’s installation but MoviePy also need additional common libraries like PIL, FFMPEG for specific usage...
+```sh
+sudo apt update
+sudo apt install imagemagick
+```
+
+> MoviePy additionally depends on the Python modules Numpy, imageio, Decorator, and tqdm, which will be automatically installed during MoviePy’s installation but it also needs extra common libraries like PIL, FFMPEG for specific usecases...
 
 ## Getting started
 
 ### Installation
 
-1. Clone the repository
+1. **Clone** the repository
 
 ```sh 
 git clone https://github.com/amaurylrd/twitch_compyle.git
 cd twitch_compyle
 ```
 
-2. Checkout the branch
+2. **Checkout** the main branch
 
 ### Setup
 
@@ -44,7 +49,7 @@ poetry lock
 poetry install
 ```
 
-### TODO .env
+Secondly refer to the [configuration guide](/CONFIGURATION.md) for a documentated overview on how to configure the ``.env`` file.
 
 ### Run
 
@@ -54,44 +59,14 @@ To run the project, run the following command in a poetry shell:
 python sources/main.py
 ```
 
-## Continous Integration
+## Getting addicted
 
-### Code Formatting
+### 🚧 Contribution
 
-> Keep it clean, keep it clear
+If you are intrested in the project, check the [development manual](/DEVELOPMENT.md).
+Please review this guide for further information on how to get started on the project for developpers and contributors.
 
-In poetry shell you can run linters that are implemented as poetry dependecies like pylama, black...
-
-```py
-black compyle/<path_to_directory_or_file>
-pylama compyle/<path_to_directory_or_file>
-```
-
-## Contributing
-
-Development of `twitch_compyle` happens at https://github.com/amaurylrd/twitch_compyle/tree/main.
-<br><br>
-&rarr; For contributing to this project please contact us via GitHub or by mail <br>
-
-1. Create a new **fork** of the project
-2. Create your feature branch
-```sh
-git checkout -b feature/AwesomeFeature
-```
-3. Add then **commit** your changes
-```sh
-git add *
-git commit -m "add some awesome feature"
-```
-4. **Push** to the branch
-```sh
-git push origin feature/AwesomeFeature
-```
-5. Open a **pull request**
-
-&rarr; If you have any suggestions, bug reports please report them to the issue tracker at https://github.com/amaurylrd/twitch_compyle/issues
-
-## Contact 
+### 📫 Contact 
   
 Tho we like postcards, we prefer emails : [@adesvall](https://github.com/adesvall), [@amaurylrd](https://github.com/amaurylrd), [@BOOOYAA](https://github.com/BOOOYAA)
 
