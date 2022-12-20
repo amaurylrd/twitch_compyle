@@ -2,6 +2,9 @@ import threading
 
 lock = threading.Lock()
 
+# modification stupide du fichier pour voir si la pipeline fonctionne !
+# tries: 2
+
 
 def func(list: list):
     pass
