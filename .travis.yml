@@ -2,6 +2,9 @@ language: python
 dist: xenial
 python: "3.10-dev"
 
+cache:
+  pip: true
+
 stages:
   - lint
 
@@ -10,6 +13,9 @@ before_install:
   - pip install poetry
 
 install:
+  # - PROJECT_DIR=$(pwd)
+  - which poetry
+  - poetry --version
   - poetry config virtualenvs.create false
   - poetry install --no-root --no-interaction
 

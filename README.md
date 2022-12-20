@@ -1,3 +1,5 @@
+[![Build Status](https://app.travis-ci.com/amaurylrd/twitch_compyle.svg?token=8zCbm6e8xiaKAE2XXKzm&branch=main)](https://app.travis-ci.com/amaurylrd/twitch_compyle)
+
 # twitch_compyle 
 
 ## Keywords 
