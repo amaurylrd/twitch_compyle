@@ -8,6 +8,7 @@
         "editor.matchBrackets": "always",
         "editor.inlineSuggest.enabled": true,
     },
+    
     "python.linting.enabled": true,
     "python.linting.lintOnSave": true,
     "python.linting.pylintPath": ".venv/bin/pylint",
@@ -22,6 +23,7 @@
     "python.analysis.diagnosticSeverityOverrides": {
         "reportMissingImports": "none"
     },
+    
     "python.formatting.provider": "black",
     "python.formatting.blackArgs": [
         "--exclude",
@@ -31,6 +33,31 @@
         "--line-length",
         "120"
     ],
+
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+
+    "markdownlint.run": "onSave",
+    "markdownlint.config": {
+        "default": true,
+        "whitespace": false,
+        "no-hard-tabs": false,
+        "MD003": {
+            "style": "atx"
+        },
+        "MD007": {
+            "indent": 4
+        },
+        "MD0029": {
+            "style": "ordered"
+        },
+        "MD033": {
+            "allowed_elements": [
+                "details",
+                "summary",
+                "b", 
+                "br"
+            ]
+        }
+    },
 }
