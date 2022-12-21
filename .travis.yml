@@ -9,8 +9,9 @@ stages:
   - lint
 
 before_install:
-  - pip install --upgrade pip
+  - python -m pip install --upgrade pip
   - pip install poetry
+  - which pip
 
 install:
   # - PROJECT_DIR=$(pwd)
