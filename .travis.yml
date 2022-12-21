@@ -2,9 +2,6 @@ language: python
 dist: xenial
 python: "3.10-dev"
 
-cache:
-  pip: true
-
 stages:
   - lint
 
