@@ -1,6 +1,6 @@
 language: python
 dist: xenial
-python: "3.10-dev"
+python: "3.8"
 
 stages:
   - lint
@@ -15,7 +15,7 @@ install:
   - which poetry
   - poetry --version
   - poetry config virtualenvs.create false
-  - poetry install --no-root --no-interaction
+  - poetry install --no-root --no-interaction --no-ansi
 
 jobs:
   include:
