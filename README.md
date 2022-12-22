@@ -14,7 +14,7 @@ APIs, Twitch, Youtube, MoviePy, OpenCV...
 
 1. Python at least 3.8
 
-2. Poetry any stable version like 1.2.2 (requires Python 3.7 and above). <br>
+2. Poetry any stable version like 1.2.2 (requires Python 3.7 or above). <br>
 <https://python-poetry.org/docs/#installation>
 
 3. ImageMagick <br>
