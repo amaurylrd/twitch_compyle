@@ -6,14 +6,11 @@ stages:
   - lint
 
 before_install:
+  - PROJECT_DIR=$(pwd)/compyle
   - pip install --upgrade pip
   - pip install poetry
-  - which pip
 
 install:
-  # - PROJECT_DIR=$(pwd)
-  - which poetry
-  - poetry --version
   - poetry config virtualenvs.create false
   - poetry install --no-root --no-interaction --no-ansi
 

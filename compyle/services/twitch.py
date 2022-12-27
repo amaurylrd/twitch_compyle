@@ -191,7 +191,7 @@ class TwitchApi(Routable):
                         clip["video_id"] != ""
                         and clip["vod_offset"] is not None
                         and (not language or clip["language"] == language)
-                        and clip["duration"] < 40
+                        and 5 < clip["duration"] < 40
                     ):
                         if not any(
                             clip["video_id"] == selected["video_id"]

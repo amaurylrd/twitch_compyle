@@ -12,14 +12,16 @@ from moviepy.editor import (
     VideoFileClip,
     concatenate_videoclips,
 )
-from moviepy.video.compositing.transitions import slide_in
+from moviepy.video.compositing.transitions import slide_in, crossfadein
 from moviepy.video.fx.fadein import fadein
 from moviepy.video.fx.resize import resize
 
 from compyle.preloader import launch_after_preload
 from compyle.services.twitch import TwitchApi
+from compyle.utils.decorators import call_before_after
 
 
+@call_before_after(urlcleanup)
 def main():
     api = TwitchApi()
 
@@ -34,10 +36,8 @@ def main():
     subclips = []
     subclips_duration = 0
 
-    subimages = []
-    subimages_broadcasters = []
+    subimages = {}
 
-    video = None
     timestamps = ""
     credits = set()
 
@@ -46,12 +46,10 @@ def main():
     # todo shuffle, pas deux même streamers de suite
     # todo break si durée au dessus de 10 minutes + historique
 
-    urlcleanup()  # clear cache
-
-    for clip in clips[:10]:
+    for clip in clips[2:4]:
         # 1. retrieve clip url and download clip file
         url = api.get_clip_url(clip)
-        temporary_file, _ = urlretrieve(url)
+        temporary_file = urlretrieve(url)[0]
 
         # 2. videoclip creation and normalization
         videoclip: VideoFileClip = VideoFileClip(temporary_file)
@@ -61,18 +59,25 @@ def main():
         videoclip = audio_normalize(videoclip)
 
         # 3. textclip creation
-        textclip: TextClip = TextClip(clip["broadcaster_name"], fontsize=60, color="white")
-        textclip = textclip.set_duration(videoclip.duration)
+        textclip: TextClip = TextClip(
+            clip["broadcaster_name"].ljust(5),
+            # TODO pourquoi ça strip
+            method="caption",
+            align="center",
+            fontsize=60,
+            color="white",
+            bg_color="rgb(145, 70, 255)",  # TODO mettre custom twitch bg-color
+            # stroke_color="black",
+            # stroke_width=1,
+        )
         textclip = textclip.set_position(("left", "top"))
+        textclip = textclip.set_duration(videoclip.duration)
+        # todo set duration 3 ou 4 secondes avec un fadeout
         textclip = textclip.fx(slide_in, duration=1, side="left")
-
-        # 4. append composite clip to subclips
-        composite: CompositeVideoClip = CompositeVideoClip([videoclip, textclip])
-        subclips.append(composite.fx(fadein, 1) if subclips else composite)
 
         def get_faces(image: cv2.Mat):
             image: cv2.Mat = cv2.resize(image, (0, 0), fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
-
+            # todo (0,0) ou None
             grayscale: cv2.Mat = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             grayscale: cv2.Mat = cv2.equalizeHist(grayscale)
 
@@ -82,13 +87,13 @@ def main():
             return classifier.detectMultiScale(
                 grayscale,
                 scaleFactor=1.3,
-                minNeighbors=4,
+                minNeighbors=6,
                 minSize=(30, 30),
                 flags=cv2.CASCADE_SCALE_IMAGE,
             )
 
-        # 5. face detection for thumbnail
-        if len(subimages) < 4 and clip["broadcaster_name"] not in subimages_broadcasters:
+        # 4. face detection for thumbnail
+        if len(subimages) < 4 and clip["broadcaster_name"] not in subimages:
             image = cv2.imread(urlretrieve(clip["thumbnail_url"])[0])
             faces = get_faces(image)
 
@@ -106,39 +111,43 @@ def main():
                 matrix = cv2.getRotationMatrix2D(center, 0, 2.0)
                 image = cv2.warpAffine(image, matrix, image.shape[1::-1], flags=cv2.INTER_LINEAR)
 
-                subimages.append(image)
-                subimages_broadcasters.append(clip["broadcaster_name"])
-
+                subimages[clip["broadcaster_name"]] = image
                 cv2.imwrite(f"./opencv/image-{len(subimages)}.png", image)
 
-        # description
+        # 5. append composite clip to subclips
+        composite: CompositeVideoClip = CompositeVideoClip([videoclip, textclip]).set_duration(videoclip.duration)
+        composite = composite.fx(crossfadein, 1) if subclips else composite
+        subclips.append(composite)
+        videoclip.close()
+        textclip.close()
+        # todo test close composite, trouver 1 liner pour les 3
+
+        # 6. updating timestamps and description
         minutes = int(subclips_duration / 60)
         seconds = int(subclips_duration % 60)
         timestamp = f"{minutes:02d}:{seconds:02d}"
         timestamps += f"{timestamp} {clip['broadcaster_name']}\n"
-        subclips_duration += videoclip.duration
+        subclips_duration += composite.duration
 
         credit = f"{clip['broadcaster_name']} - https://www.twitch.tv/{clip['broadcaster_name']}"
         credits.add(credit)
-
-        videoclip.close()
 
     if subclips:
         thumbnail = pil.new("RGB", (1920, 1080))
         width, height = tuple(size // 2 for size in thumbnail.size)
 
-        for i, subimage in enumerate(subimages):
+        for i, (_, subimage) in enumerate(subimages.items()):
             border = [30] * 4
-            color = (145, 70, 255)
+
             subimage = cv2.resize(subimage, (width, height))
-            subimage = cv2.copyMakeBorder(subimage, *border, cv2.BORDER_CONSTANT, value=color)
+            subimage = cv2.copyMakeBorder(subimage, *border, cv2.BORDER_CONSTANT, value=(145, 70, 255))
             subimage = pil.fromarray(subimage)
 
             thumbnail.paste(subimage, (i % 2 * width, i // 2 * height))
 
         thumbnail.save("thumbnail.png")
         # todo fall back thumbnail remote_thumbnail = urlretrieve(clips[0]["thumbnail_url"])[0]
-        exit(0)
+        # exit(0)
 
         # to be remove to when remote download is fixed
         local_file = "clips.mp4"
@@ -146,12 +155,16 @@ def main():
             os.remove(local_file)
 
         video: CompositeVideoClip = concatenate_videoclips(subclips, method="compose", padding=-1)
-        video.write_videofile(local_file, codec="libx264", audio_codec="aac", verbose=False)
+        # si debug ultrafast, si prod slow preset="ultrafast",
+        video.write_videofile(local_file, codec="h264_nvenc", audio_codec="aac", verbose=False)
         video.close()
+        # adjust thread and codec for gpu acceleration
+
+        print(video.duration)
+        print(subclips_duration)
 
         description = "🎥 Credits:\n" + "\n".join(credits) + "\n\n⌚ Timestamps:\n" + timestamps
         print(description)
-    urlcleanup()
 
     # todo shuffle + pas deux fois le meme streamer à la suite ?
 

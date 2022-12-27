@@ -9,7 +9,7 @@ Development of `twitch_compyle` happens at https://github.com/amaurylrd/twitch_c
 1. Create a new **fork** of the project
 2. Create your feature **branch**
 ```sh
-git checkout -b feature/AwesomeFeature
+git checkout -b feature:AwesomeFeature
 ```
 3. Add then **commit** your changes
 ```sh
@@ -18,7 +18,7 @@ git commit -m "add some awesome feature"
 ```
 4. **Push** to the branch
 ```sh
-git push origin feature/AwesomeFeature
+git push origin feature:AwesomeFeature
 ```
 5. Open a **pull request**
 
@@ -38,20 +38,12 @@ black compyle/<path_to_directory_or_file>
 pylama compyle/<path_to_directory_or_file>
 ```
 
-TODO git squash, 
+You are also strongly encouraged to keep the git trace as clean as possible with for example consice commits that are expected to start with one in feature, bugfix, update, release, or anything that gives a short and comprehensible hint on the content.
 
-```sh
-git commit --amend
-git push --force
-```
-```sh
-git rebase -i <hash_of_commit> or git rebase -i HEAD~4
-git push origin HEAD:<name_of_remote_branch> --force
-```
-Make sure the topmost, first commit says “pick” and change the rest below from “pick” to “squash”. This will squash each commit into the previous commit, which will continue until every commit is squashed into the first commit.
-in git editor
+You can also make use of the provided git commands that can help in direct link with the previous point, such as **squashing** (with ``git rebase``) or **ammending** (with ``git commit --amend``).
 
 
+
+TODO
 changelog https://github.com/othneildrew/Best-README-Template/blob/master/CHANGELOG.md
-
 code audit
