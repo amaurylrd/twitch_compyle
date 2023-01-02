@@ -1,6 +1,6 @@
 <!-- markdownlint-disable MD029 MD041 MD042 MD045 -->
 
-[![Build Status](https://app.travis-ci.com/amaurylrd/twitch_compyle.svg?token=8zCbm6e8xiaKAE2XXKzm&branch=main)](https://app.travis-ci.com/amaurylrd/twitch_compyle)[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)[]
+[![Build Status](https://app.travis-ci.com/amaurylrd/twitch_compyle.svg?token=8zCbm6e8xiaKAE2XXKzm&branch=main)](https://app.travis-ci.com/amaurylrd/twitch_compyle)[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 # twitch_compyle
 
