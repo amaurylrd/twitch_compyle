@@ -20,7 +20,7 @@ APIs, Twitch, Youtube, MoviePy, OpenCV...
 3. ImageMagick <br>
 <https://imagemagick.org/script/download.php>
 
-:warning: Once you have installed it, ImageMagick should be automatically detected by MoviePy, except for some developpers under specific OS like:
+:warning: Once you have installed it, ImageMagick should be automatically detected by MoviePy, except for some developpers under specific OS:
 
 - for **windows users**, you may also set the variable _IMAGEMAGICK_BINARY_ from the moviepy/config.py file. To avoid doing so, make sure to check _"install legacy utilities"_ in the installation wizard.
   
