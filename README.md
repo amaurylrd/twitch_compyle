@@ -1,5 +1,6 @@
-[![Build Status](https://app.travis-ci.com/amaurylrd/twitch_compyle.svg?token=8zCbm6e8xiaKAE2XXKzm&branch=main)](https://app.travis-ci.com/amaurylrd/twitch_compyle)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+<!-- markdownlint-disable MD029 MD041 MD042 MD045 -->
+
+[![Build Status](https://app.travis-ci.com/amaurylrd/twitch_compyle.svg?token=8zCbm6e8xiaKAE2XXKzm&branch=main)](https://app.travis-ci.com/amaurylrd/twitch_compyle)[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 # twitch_compyle
 
@@ -19,16 +20,11 @@ APIs, Twitch, Youtube, MoviePy, OpenCV...
 3. ImageMagick <br>
 <https://imagemagick.org/script/download.php>
 
-:warning: Once you have installed it, ImageMagick should be automatically detected by MoviePy, except for some developpers under specific OS like:
+:warning: Once you have installed it, ImageMagick should be automatically detected by MoviePy, except for some developpers under specific OS:
 
-- for **windows users**, you may also set the variable _IMAGEMAGICK_BINARY_ from the moviepy/config.py file. To avoid doing so, make sure to check _"install legacy utilities"_ in the installation wizard.
+- for **windows users**, you may also set the variable _IMAGEMAGICK_BINARY_ from the moviepy config file. To avoid doing so, make sure to check _"install legacy utilities"_ in the installation wizard.
   
-- for **ubuntu users (>= 19.04)**, you may have installed from [apt://imagemagick]() or via the following command lines, then you need to disable this line ``<policy domain="path" rights="none" pattern="@*"/>`` from the security policy file located at ``/etc/ImageMagick/policy.xml``.
-
-```sh
-sudo apt update
-sudo apt install imagemagick
-```
+- for **ubuntu users (>= 19.04)**, you may have installed from [apt://imagemagick]() (or via the apt install command lines), then you need to disable this line ``<policy domain="path" rights="none" pattern="@*"/>`` from the security policy file located at ``/etc/ImageMagick/policy.xml``.
 
 > MoviePy additionally depends on the Python modules Numpy, imageio, Decorator, and tqdm, which will be automatically installed during MoviePy’s installation but it also needs extra common libraries like PIL, FFMPEG for specific usecases...
 
