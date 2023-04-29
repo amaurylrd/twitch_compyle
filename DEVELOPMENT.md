@@ -1,34 +1,36 @@
+<!-- markdownlint-disable MD029 MD041 -->
 🎉🎉 Thank you so much for taking the time to contribute. Any contributions you make are **greatly appreciated** 🎉🎉
 
 ## Contributing
 
 Development of `twitch_compyle` happens at <https://github.com/amaurylrd/twitch_compyle/tree/main>.
 <br><br>
-&rarr; For contributing to this project please contact us via GitHub or by mail <br>
+&rarr; One way of contributing to this project is to contact us via GitHub or by mail <br>
+&rarr; Another way is to make a merge request:
 
 1. Create a new **fork** of the project
 2. Create your feature **branch**
 
 ```sh
-git checkout -b feature:AwesomeFeature
+git checkout -b feat/AwesomeFeature
 ```
 
 3. Add then **commit** your changes
 
 ```sh
 git add *
-git commit -m "add some awesome feature"
+git commit -m "feat: add some awesome feature"
 ```
 
 4. **Push** to the branch
    
 ```sh
-git push origin feature:AwesomeFeature
+git push origin feat/AwesomeFeature
 ```
 
 5. Open a **pull request**
 
-&rarr; If you have any suggestions, bug reports please report them to the issue tracker at https://github.com/amaurylrd/twitch_compyle/issues
+&rarr; If you have any suggestions, bug reports please report them to the issue tracker at <https://github.com/amaurylrd/twitch_compyle/issues>
 
 
 ## Continous Integration

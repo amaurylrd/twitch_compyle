@@ -6,8 +6,9 @@ description = ""
 authors = [
     "adesvall <adesvall@users.noreply.github.com>",
     "amaurylrd <amaurylrd@users.noreply.github.com>",
-    "ThomasAbreuDias <ThomasAbreuDias@users.noreply.github.com>"
+    "thomasabreudias <thomasabreudias@users.noreply.github.com>"
 ]
+repository = "https://https://github.com/amaurylrd/twitch_compyle"
 readme = "README.md"
 license = "Apache-2.0"
 
@@ -21,15 +22,16 @@ moviepy = "1.0.3"
 opencv-python = "4.6.0.66"
 
 [tool.poetry.dev-dependencies]
-black = "^22.10.0"
-pylama = "^8.4.1"
-pylint = "^2.15.5"
-isort = "^5.10.1"
 bandit = "^1.7.4"
+
+[tool.poetry.group.lint.dependencies]
+black = "^22.10.0"
+pylama = {extras = ["all"], version = "^8.4.1"}
+isort = "^5.10.1"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=1.2.0"]
 
 [tool.black]
 exclude = '''
@@ -46,4 +48,18 @@ line-length = 120
 
 [tool.isort]
 profile = "black"
+known_first_party = "compyle"
 
+[tool.pylama]
+format = "pycodestyle"
+linters = "pycodestyle,pyflakes,mccabe,pylint"
+skip = "resources/*,.venv/*,tests/*"
+max_line_length = 120
+
+[tool.pylama.linter.pycodestyle]
+ignore = "E501,E261,E201,E202,E302,E305,E731,W6,E402,W503,W605"
+max_line_length = 120
+
+[tool.pylama.linter.pylint]
+disable = "R,E1101,E1130,E1136,E0401,C0103,C0114,C0115,C0116,W0511,W0603,W0612,W0613,W0703,W1514,W1401,W0622"
+max_line_length = 120

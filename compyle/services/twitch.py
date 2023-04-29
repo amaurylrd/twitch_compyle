@@ -1,72 +1,45 @@
-# pylint: disable=unused-argument, unnecessary-lambda-assignment
-
 import datetime
-import logging
 from os import getenv
-from typing import Any
+from typing import Any, Dict, List
 
 from requests import HTTPError
 
 from compyle.services.routing import Routable
+from compyle.utils.descriptors import deserialize
 
 
 class TwitchApi(Routable):
+    """This class implements the Twitch API legacy client v5 and OAuth 2.0 for authentication.
+
+    See:
+        https://dev.twitch.tv/docs/api/reference for more information.
+        https://dev.twitch.tv/docs/api/migration/ for endpoints equivalence.
+    """
+
     def __init__(self):
-        helix_url = "https://api.twitch.tv/helix"
-        oauth2_url = "https://id.twitch.tv/oauth2"
+        """Initializes a new instance of the Twitch API client."""
+        # retrieves the routes from the JSON file
+        super().__init__(deserialize("compyle/services/routes/twitch.json"))
 
-        routes = {
-            "auth": {
-                "base_url": oauth2_url,
-                "slug": "/token",
-                "req": ["client_id", "client_secret", "grant_type"],
-            },
-            "validate": {
-                "base_url": oauth2_url,
-                "slug": "/validate",
-            },
-            "games": {
-                "base_url": helix_url,
-                "slug": "/games",
-                "opt": ["after", "before", "first"],
-            },
-            "game": {
-                "base_url": helix_url,
-                "slug": "/games",
-                "req": ["name"],
-            },
-            "clips": {
-                "base_url": helix_url,
-                "slug": "/clips",
-                "req": ["game_id"],
-                "opt": ["started_at", "ended_at", "before", "first", "after"],
-            },
-            "clip": {
-                "base_url": helix_url,
-                "slug": "/clips",
-                "req": ["id"],
-            },
-        }
+        # retrieves the client id and secret from the environment variables
+        self.client_id: str = getenv("TWITCH_APP_CLIENT_ID")
+        self.client_secret: str = getenv("TWITCH_APP_CLIENT_SECRET")
 
-        super().__init__(routes)
+        # generates a new client access token
+        self.access_token: str = self.get_new_access_token()
 
-        self.client_id = getenv("TWITCH_APP_CLIENT_ID")
-        self.client_secret = getenv("TWITCH_APP_CLIENT_SECRET")
-        self.access_token = self.get_new_access_token()["access_token"]
-
-    def __request_header(self, *, client_id=True, acces_token=True) -> dict:
-        """Returns the request header.
+    def __request_header(self, *, client_id: bool = True, acces_token: bool = True, **args):  # Dict[str, str]
+        """Constructs and returns the request header.
 
         Args:
-            client_id (bool, optional): Append the client id if True. Defaults to True.
-            acces_token (bool, optional): Append the access token if True. Defaults to True.
+            client_id (bool, optional): appends the client id if `True`. Defaults to `True`.
+            acces_token (bool, optional): appends the access token if `True`. Defaults to `True`.
+            **args: the additional header attributes.
 
         Returns:
-            dict: the common request header with the specified attributes.
+            Dict[str, str]: the common request header with the specified attributes.
         """
-        header = {
-            "Accept": "application/vnd.twitchtv.v5+json",
-        }
+        header = {"Accept": "application/vnd.twitchtv.v5+json", **args}
 
         if client_id and self.client_id:
             header["Client-ID"] = self.client_id
@@ -79,6 +52,9 @@ class TwitchApi(Routable):
     def get_new_access_token(self) -> Any:
         """Gets a new client access token from Twitch API.
 
+        See:
+            https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#getting-oauth-access-tokens
+
         Example:
             >>> self.get_new_access_token()
             >>> {'access_token': 'cfabdegwdoklmawdzdo98xt2fo512y', 'expires_in': 3600, 'token_type': 'bearer'}
@@ -89,7 +65,7 @@ class TwitchApi(Routable):
         header = {"Content-Type": "application/x-www-form-urlencoded", "Accept": "application/vnd.twitchtv.v5+json"}
         params = {"client_id": self.client_id, "client_secret": self.client_secret, "grant_type": "client_credentials"}
 
-        return self.router.request("POST", "auth", header, **params)
+        return self.router.request("POST", "auth", header, **params)["access_token"]
 
     def is_access_token_valid(self, access_token: str) -> bool:
         """Checks if the specified access token is valid.
@@ -112,6 +88,9 @@ class TwitchApi(Routable):
     def get_top_games(self, *, limit=10) -> Any:
         """Gets the top viewed categories/games on Twitch.
 
+        See:
+            https://dev.twitch.tv/docs/api/reference/#get-top-games
+
         Example:
             >>> self.get_top_games(limit=1)
             >>> {{"id": "33214", "name": "Fortnite", "box_art_url": "...", ...}}
@@ -123,12 +102,15 @@ class TwitchApi(Routable):
             Any: the list of top viewed games, raises an error otherwise.
         """
         header = self.__request_header()
-        params = {"first": max(1, min(limit, 100))}
+        params = {"first": str(max(1, min(limit, 100)))}
 
         return self.router.request("GET", "games", header, **params)
 
     def get_game_id(self, game_name: str) -> str:
-        """Returns the game with the specified id by name.
+        """Returns the game id from its name.
+
+        See:
+            https://dev.twitch.tv/docs/api/reference/#get-games
 
         Example:
             >>> game_name = "VALORANT"
@@ -136,7 +118,7 @@ class TwitchApi(Routable):
             >>> "516575"
 
         Args:
-            game_name (str): the name of the game to get.
+            game_name (str): the name of the game to search for.
 
         Returns:
             str: the id of the game if the response was a success.
@@ -148,8 +130,11 @@ class TwitchApi(Routable):
 
         return response["data"][0]["id"]
 
-    def get_game_clips(self, game_id: str, *, limit=100, period=3) -> Any:
+    def get_game_clips(self, game_id: str, *, limit=100, period=3) -> List[Any]:
         """Returns the top clips for the specified game.
+
+        See:
+            https://dev.twitch.tv/docs/api/reference/#get-clips
 
         Args:
             game_id (str): the id of the game.
@@ -157,73 +142,85 @@ class TwitchApi(Routable):
             period (int, optional): the date delta in days. Defaults to 3 days.
 
         Returns:
-            Any: the list of clips.
+            List[Any]: the list of clips if the response was a success.
         """
         # date format is RFC3339 like yyyy-MM-ddTHH:mm:ssZ
-        # language format is ISO-639-1 2 digits language code
-
         started_at = datetime.datetime.utcnow() - datetime.timedelta(days=max(1, period))
         ended_at = datetime.datetime.utcnow()
 
         header = self.__request_header()
         params = {
             "game_id": game_id,
-            "first": max(1, min(limit, 100)),
+            "first": str(max(1, min(limit, 100))),
             "started_at": started_at.isoformat("T") + "Z",
             "ended_at": ended_at.isoformat("T") + "Z",
         }
 
-        # todo put in signature
-        minimum_views = 50
-        maximum_page = 10
-        minimum_clips = 20
-        language = "fr"
+        return self.__parse_clips(header, params)
 
-        logger = logging.getLogger(__name__)
+    def __parse_clips(self, header: Dict[str, str], params: Dict[str, Any], *, pages: int = 10) -> List[Any]:
+        """Collects and normalizes the clips from the paginated request.
+
+        Args:
+            header (Dict[str, str]): the request header.
+            params (Dict[str, Any]): the request parameters.
+            pages (int, optional): the maximum number of pages to request.
+
+        Returns:
+            List[Any]: the list of clips.
+        """
+        # TODO put in signature, in **kwargs or .env ?
+        min_views = 50  # the minimum number view count for a clip
+        max_clips = 20  # the maximum number of clips to return
+        min_duration = 5  # the minimum duration of the clips in seconds
+        max_duration = 40  # the maximum duration of the clips in seconds
+        language = "fr"  # the clip language in ISO-639-1 format as 2 digits code
+        whitelist = []  # the list of broadcaster ids whose clips are included regardless of the other criteria
+        blacklist = []  # the list of broadcaster ids whose clips are ignored
 
         clips = []
-        for page in range(maximum_page):
+        for _ in range(max(1, pages)):
             response = self.router.request("GET", "clips", header, **params)
 
-            if response["data"]:
-                for clip in response["data"]:
-                    if (
-                        clip["video_id"] != ""
-                        and clip["vod_offset"] is not None
-                        and (not language or clip["language"] == language)
-                        and 5 < clip["duration"] < 40
+            if not response["data"] or not response["pagination"]["cursor"]:
+                break
+
+            # parses the clips and filters them with the specified criteria
+            for clip in response["data"]:
+                # skips the clip if the broadcaster is in the blacklist
+                if clip["broadcaster_id"] in blacklist:
+                    continue
+
+                # stops the parsing if the clips have too low view_count of clips is reached
+                if clip["view_count"] < min_views:
+                    break
+
+                if (
+                    # checks if the broadcaster is in the whitelist
+                    clip["broadcaster_id"] in whitelist
+                    # checks if the video is available
+                    or clip["video_id"] != ""
+                    and clip["vod_offset"] is not None
+                    # checks if the clip language is the specified one, if any specified all languages are valid
+                    and (not language or clip["language"] == language)
+                    # checks if the clip duration is between the specified bounds
+                    and round(min_duration, 1) <= clip["duration"] < round(max_duration, 1)
+                ):
+                    # checks if the video the clip is from is not already in the list from the vod_offset
+                    if not any(
+                        clip["video_id"] == c["video_id"]
+                        and abs(clip["vod_offset"] - c["vod_offset"]) <= max(clip["duration"], c["duration"])
+                        for c in clips
                     ):
-                        if not any(
-                            clip["video_id"] == selected["video_id"]
-                            and abs(clip["vod_offset"] - selected["vod_offset"])
-                            <= max(clip["duration"], selected["duration"])
-                            for selected in clips
-                        ):
-                            clips.append(clip)
+                        clips.append(clip)
 
-                if len(clips) >= minimum_clips:
-                    logger.debug("Parsing stopped, enough clips were found (above %s)", minimum_clips)
-                    break
+                        # stops the parsing if enough clips were found
+                        if max_clips and len(clips) == max_clips:
+                            break
 
-                if response["data"][0]["view_count"] < minimum_views:
-                    logger.debug("Parsing stopped, maximum view count for this page is too low (>= %s)", minimum_views)
-                    break
-
-                if not response["pagination"]["cursor"]:
-                    logger.debug("Parsing stopped, there is no more pages")
-                    break
-
-                params["after"] = response["pagination"]["cursor"]
+            params["after"] = response["pagination"]["cursor"]
 
         clips.sort(key=lambda clip: (clip["view_count"], clip["created_at"]), reverse=True)
-        logger.debug(
-            "Parsing done, %s/~%s of the clips kept in the %d last days",
-            len(clips),
-            page * limit,
-            max(1, period),
-        )
-
-        # TODO duration moyenne, meilleur vue, whitelist
 
         return clips
 
@@ -250,11 +247,19 @@ class TwitchApi(Routable):
     def get_clip(self, clip_id: str) -> Any:
         """Returns the clip with the specified id.
 
+        See:
+            https://dev.twitch.tv/docs/api/reference/#get-clips
+
+        Examples:
+            >>> clip_id = "AwsomeClip"
+            >>> self.get_clip(clip_id)
+            >>> {"id": "AwsomeClip", "url": "https://clips.twitch.tv/AwsomeClip", "embed_url": "...", ...}
+
         Args:
             clip_id (str): the id of the clip to get.
 
         Returns:
-            Any: the specified clip if the request was a success
+            Any: the specified clip if the request was a success.
         """
         header = self.__request_header()
         params = {"id": clip_id}

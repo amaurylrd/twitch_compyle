@@ -12,19 +12,19 @@ APIs, Twitch, Youtube, MoviePy, OpenCV...
 
 ## Requierements
 
-1. Python at least 3.8
+1. Python, at least 3.8
 
-2. Poetry any stable version like 1.2.2 (requires Python 3.7 or above). <br>
+2. Poetry, any stable version since 1.2 but idealy requires 1.3 or above <br>
 <https://python-poetry.org/docs/#installation>
 
-3. ImageMagick <br>
+1. ImageMagick <br>
 <https://imagemagick.org/script/download.php>
 
 :warning: Once you have installed it, ImageMagick should be automatically detected by MoviePy, except for some developpers under specific OS:
 
 - for **windows users**, you may also set the variable _IMAGEMAGICK_BINARY_ from the moviepy config file. To avoid doing so, make sure to check _"install legacy utilities"_ in the installation wizard.
   
-- for **ubuntu users (>= 19.04)**, you may have installed from [apt://imagemagick]() (or via the apt install command lines), then you need to disable this line ``<policy domain="path" rights="none" pattern="@*"/>`` from the security policy file located at ``/etc/ImageMagick/policy.xml``.
+- for **ubuntu users (≥ 19.04)**, you may have installed from [apt://imagemagick]() (or via the apt install command line), then you need to disable this line ``<policy domain="path" rights="none" pattern="@*"/>`` from the security policy file located at ``/etc/ImageMagick/policy.xml``.
 
 > MoviePy additionally depends on the Python modules Numpy, imageio, Decorator, and tqdm, which will be automatically installed during MoviePy’s installation but it also needs extra common libraries like PIL, FFMPEG for specific usecases...
 
@@ -47,7 +47,7 @@ To setup this project, install the dependencies using poetry like so:
 
 ```sh
 poetry lock
-poetry install
+poetry install --sync
 ```
 
 Secondly refer to the [configuration guide](/CONFIGURATION.md) for a documentated overview on how to configure the ``.env`` file.
