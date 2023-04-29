@@ -1,8 +1,9 @@
 import logging
+import os
 
 import dotenv
 from moviepy import config
-import os
+
 
 # todo move to pakage
 def launch_after_preload(method_callback, *args, **kwargs):

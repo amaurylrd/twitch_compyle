@@ -1,5 +1,4 @@
 {
-    "python.defaultInterpreterPath": ".venv/bin/python",
     "files.autoSave": "onFocusChange",
     "python.terminal.activateEnvironment": true,
     "python.terminal.activateEnvInCurrentTerminal": true,
@@ -11,10 +10,8 @@
             120
         ],
     },
-    
     "python.linting.enabled": true,
     "python.linting.lintOnSave": true,
-    "python.linting.pylintPath": ".venv/bin/pylint",
     "python.linting.pylintEnabled": true,
     "python.linting.pylintArgs": [
         "--disable=missing-module-docstring,missing-function-docstring,missing-class-docstring",
@@ -26,7 +23,6 @@
     "python.analysis.diagnosticSeverityOverrides": {
         "reportMissingImports": "none"
     },
-    
     "python.formatting.provider": "black",
     "python.formatting.blackArgs": [
         "--exclude",
@@ -36,10 +32,8 @@
         "--line-length",
         "120"
     ],
-
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
-
     "markdownlint.run": "onSave",
     "markdownlint.config": {
         "default": true,

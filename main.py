@@ -15,20 +15,37 @@ from moviepy.editor import (
 from moviepy.video.compositing.transitions import slide_in, crossfadein
 from moviepy.video.fx.fadein import fadein
 from moviepy.video.fx.resize import resize
+import datetime
 
+from compyle.utils.descriptors import serialize
 from compyle.preloader import launch_after_preload
 from compyle.services.twitch import TwitchApi
 from compyle.utils.decorators import call_before_after
 
 
 @call_before_after(urlcleanup)
-def main():
-    api = TwitchApi()
+def collect(*, reports_folder: str = "reports", game_name: str = "League of Legends", period: int = 2):
+    twitch_api = TwitchApi()
 
-    game_name = "League of Legends"
-    # game_name = "VALORANT"
-    game_id = api.get_game_id(game_name)
-    clips = api.get_game_clips(game_id)
+    game_id = twitch_api.get_game_id(game_name)
+    clips = twitch_api.get_game_clips(game_id, period=period)
+
+    if not os.path.isdir(reports_folder):
+        os.mkdir(reports_folder)
+
+    output_file: str = (
+        f'{reports_folder}/{game_name.replace(" ", "-")}_{datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")}.json'
+    )
+    serialize(output_file, clips)
+
+    return output_file
+
+
+def main():
+    # workflow= collect -> edit -> upload en json
+    # https://docs.python.org/3/library/argparse.html
+    report = collect()
+    exit(0)
 
     # import random
     # random.shuffle(clips)
