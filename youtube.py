@@ -31,7 +31,6 @@ routes = {
 
 class YoutubeApi(Routable):
     """This class implements the Youtube data API v3 and OAuth 2.0 for authentication."""
-
     def __init__(self):
         """Initializes a new instance of the Youtube API client."""
         # retrieves the routes description from the JSON file
