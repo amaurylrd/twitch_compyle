@@ -3,8 +3,8 @@ import time
 from abc import ABC
 from collections.abc import Iterable
 from datetime import datetime, timedelta
-from typing import Any, Dict, KeysView, Optional, Set
-from urllib.parse import urlencode, urlparse, urlunparse
+from typing import Any, Dict, KeysView, List, Optional, Set, Tuple
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 import requests
 from rest_framework import status
@@ -155,6 +155,18 @@ class Endpoint:
         components[4] = urlencode(noramlized)
 
         return urlunparse(components)
+
+    @staticmethod
+    def extract_url_params(url: str) -> List[Tuple[str, str]]:
+        """Extracts the parameters from the specified url.
+
+        Args:
+            url (str): the url to extract the parameters from.
+
+        Returns:
+            List[Tuple[str, str]]: the list of parameters, as G-d intended.
+        """
+        return parse_qsl(urlparse(url).query, keep_blank_values=True)
 
 
 class Method(Enum):
@@ -310,19 +322,19 @@ class Router:
             raise error
         finally:
             LOGGER.debug(
-                "Request %s %s, respond with %s in %.3fs",
+                "Request %s %s, respond with status %s in %.3fs",
                 method,
                 url.split("?", maxsplit=1)[0].split("/")[-1],
                 response.status_code,
                 response.elapsed.total_seconds(),
             )
 
-    def __noramlized_response(self, response: requests.Response, jsonify: bool = True) -> Any:
+    def __noramlized_response(self, response: requests.Response, return_json: bool = True) -> Any:
         """Returns the response as JSON if the response is valid.
 
         Args:
             response (requests.Response): the response to be decoded.
-            jsonify (bool, optional): tells if the response has to be decoded to JSON. Defaults to `True`.
+            return_json (bool, optional): tells if the response has to be decoded to JSON. Defaults to `True`.
 
         Raises:
             requests.exceptions.JSONDecodeError: if the response is not JSON valid.
@@ -331,25 +343,27 @@ class Router:
             Any: the response or the JSON-encoded content if the option is specified.
         """
         try:
-            return response.json() if jsonify else response
+            return response.json() if return_json else response
         except requests.exceptions.JSONDecodeError as error:
             raise error
 
-    def request(self, method: str, namespace: str, header: Dict[str, str], *, json=True, **params) -> Any:
+    def request(
+        self, method: str, namespace: str, header: Dict[str, str] = None, *, return_json: bool = True, **params
+    ) -> Any:
         """Requests the specified url with the specified HTTP method and query parameters.
 
         Args:
             method (str): the HTTP method to be used.
             namespace (str): the namespace to be fetched.
-            header (dict): the header to be used for the HTTP request.
-            json (bool): if the response is decoded to JSON.
-            paramas (dict): the parameters of the query.
+            header (Dict[str, str]): the header to be used for the HTTP request. Defaults to `None`.
+            return_json (bool): if the response is decoded to JSON. Defaults to `True`.
+            **paramas: the parameters of the query.
 
         Returns:
             Any: the response or the JSON-encoded content if the option is specified.
         """
         url: str = self.route(namespace, **params)
-        response: requests.Response = self.__execute_request(method, url, header)
+        response: requests.Response = self.__execute_request(method, url, {} if header is None else header)
 
         backoff: float = 0.5  # in seconds
         max_retries: int = 3
@@ -362,7 +376,7 @@ class Router:
                 LOGGER.debug(
                     """You may check the API status page %sfor relevant updates and details on health
                     and incidents.""",
-                    "(" + self.__status_page + ") " if self.__status_page else " ",
+                    "(" + self.status_page + ") " if self.status_page else "",
                 )
             elif response.status_code == status.HTTP_429_TOO_MANY_REQUESTS:
                 epoch_timestamp: str = response.headers["Ratelimit-Reset"]
@@ -380,23 +394,25 @@ class Router:
                 backoff *= 2
                 max_retries -= 1
 
-        return self.__noramlized_response(response, json)
+        return self.__noramlized_response(response, return_json)
 
-    def set_status_page(self, status_page: str) -> None:
-        """Sets the status page with the specified url.
-
-        Args:
-            status_page (str): the status page to be set.
-        """
-        self.__status_page = status_page
-
-    def get_status_page(self) -> Optional[str]:
+    @property
+    def status_page(self) -> Optional[str]:
         """Returns the status page.
 
         Returns:
             Optional[str]: the status page if set else None.
         """
         return self.__status_page
+
+    @status_page.setter
+    def status_page(self, status_page: str) -> None:
+        """Sets the status page with the specified url.
+
+        Args:
+            status_page (str): the status page to be set.
+        """
+        self.__status_page = status_page
 
 
 # pylint: disable=too-few-public-methods
@@ -412,8 +428,8 @@ class Routable(ABC):
             routes (Dict[str, Any]): the routes to be registered with their params.
         """
         for key, values in routes.items():
-            if not self.router.get_status_page() and key == "status":
-                self.router.set_status_page(values)
+            if not self.router.status_page and key == "status":
+                self.router.status_page = values
             else:
                 self.router.register(key, Endpoint(**values))
         LOGGER.debug("Registered routes for %s: %s", self.__class__.__name__, list(self.router.get_registered()))

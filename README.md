@@ -69,7 +69,7 @@ Please review this guide for further information on how to get started on the pr
 
 ### 📫 Contact
   
-Tho we like postcards, we prefer emails : [@adesvall](https://github.com/adesvall), [@amaurylrd](https://github.com/amaurylrd) (owner), [@BOOOYAA](https://github.com/BOOOYAA)
+Tho we like postcards, we prefer emails : [@adesvall](https://github.com/adesvall), [@amaurylrd](https://github.com/amaurylrd) (owner), [@thomasabreudias](https://github.com/ThomasAbreuDias)
 
 ## License
 

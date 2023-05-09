@@ -1,6 +1,6 @@
 import datetime
 from os import getenv
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from requests import HTTPError
 
@@ -22,8 +22,12 @@ class TwitchApi(Routable):
         super().__init__(deserialize("compyle/services/routes/twitch.json"))
 
         # retrieves the client id and secret from the environment variables
-        self.client_id: str = getenv("TWITCH_APP_CLIENT_ID")
-        self.client_secret: str = getenv("TWITCH_APP_CLIENT_SECRET")
+        self.client_id: Optional[str] = getenv("TWITCH_APP_CLIENT_ID")
+        self.client_secret: Optional[str] = getenv("TWITCH_APP_CLIENT_SECRET")
+
+        # checks if the client id and secret are specified
+        if not self.client_id or not self.client_secret:
+            raise ValueError("The client id and secret must be specified in the environment variables.")
 
         # generates a new client access token
         self.access_token: str = self.get_new_access_token()
@@ -50,10 +54,11 @@ class TwitchApi(Routable):
         return header
 
     def get_new_access_token(self) -> Any:
-        """Gets a new client access token from Twitch API.
+        """Gets a new client access token from Twitch API following the Client Credentials Grant Flow.
 
         See:
             https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#getting-oauth-access-tokens
+            https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#client-credentials-grant-flow
 
         Example:
             >>> self.get_new_access_token()
