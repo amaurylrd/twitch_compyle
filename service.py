@@ -1,7 +1,7 @@
 from os import getenv
 from typing import Any, Dict, Optional
-from compyle.services.routing import Routable
 
+from compyle.services.routing import Routable
 from compyle.utils.descriptors import deserialize
 
 

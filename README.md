@@ -54,10 +54,10 @@ Secondly refer to the [configuration guide](/CONFIGURATION.md) for a documentate
 
 ### Run
 
-To run the project, run the following command in a poetry shell:
+To run the project and list the possible sub-commands, run the following command in a poetry shell:
 
 ```sh
-python sources/main.py
+python sources/main.py -h
 ```
 
 ## Getting addicted

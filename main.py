@@ -1,6 +1,8 @@
 # pylint: disable=unused-import, import-outside-toplevel, invalid-name
 
+import datetime
 import os
+from typing import Optional
 from urllib.request import urlcleanup, urlretrieve
 
 import cv2
@@ -12,35 +14,18 @@ from moviepy.editor import (
     VideoFileClip,
     concatenate_videoclips,
 )
-from moviepy.video.compositing.transitions import slide_in, crossfadein
+from moviepy.video.compositing.transitions import crossfadein, slide_in
 from moviepy.video.fx.fadein import fadein
 from moviepy.video.fx.resize import resize
-import datetime
 
-from compyle.utils.descriptors import serialize
+from compyle.actions import collect
 from compyle.preloader import launch_after_preload
 from compyle.services.twitch import TwitchApi
 from compyle.utils.decorators import call_before_after
+from compyle.utils.descriptors import serialize
 
 
 @call_before_after(urlcleanup)
-def collect(*, reports_folder: str = "reports", game_name: str = "League of Legends", period: int = 2):
-    twitch_api = TwitchApi()
-
-    game_id = twitch_api.get_game_id(game_name)
-    clips = twitch_api.get_game_clips(game_id, period=period)
-
-    if not os.path.isdir(reports_folder):
-        os.mkdir(reports_folder)
-
-    output_file: str = (
-        f'{reports_folder}/{game_name.replace(" ", "-")}_{datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")}.json'
-    )
-    serialize(output_file, clips)
-
-    return output_file
-
-
 def main():
     # workflow= collect -> edit -> upload en json
     # https://docs.python.org/3/library/argparse.html
@@ -188,5 +173,3 @@ def main():
 
 if __name__ == "__main__":
     launch_after_preload(main)
-
-# youtube upload https://github.com/ClarityCoders/AutoTube/blob/master/utils/upload_video.py

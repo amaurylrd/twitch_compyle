@@ -54,4 +54,6 @@ You can also make use of the provided git commands that can help in direct link 
 
 TODO
 changelog https://github.com/othneildrew/Best-README-Template/blob/master/CHANGELOG.md
+documentation pdoc
+pre-commit
 code audit

@@ -1,8 +1,8 @@
+import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from os import getenv
 from typing import Dict, List, Optional, Tuple
 from urllib.parse import parse_qs, urlparse
-import webbrowser
 
 from compyle.services.routing import Routable
 from compyle.utils.descriptors import deserialize
