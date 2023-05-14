@@ -1,0 +1,23 @@
+{
+    "auth": {
+        "base_url": "https://accounts.google.com/o/oauth2/v2/",
+        "slug": "auth",
+        "req": ["client_id", "scope", "response_type", "redirect_uri"],
+        "opt": ["access_type", "include_granted_scopes", "state", "login_hint", "prompt"]
+    },
+    "token": {
+        "base_url": "https://oauth2.googleapis.com/",
+        "slug": "token",
+        "req": ["client_id", "client_secret", "code", "grant_type", "redirect_uri"]
+    },
+    "categories": {
+        "base_url": "https://www.googleapis.com/youtube/v3/",
+        "slug": "videoCategories",
+        "req": ["part"],
+        "opt": ["id", "regionCode"]
+    },
+    "upload": {
+        "base_url": "https://www.googleapis.com/upload/youtube/v3",
+        "slug": "videos"
+    }
+}

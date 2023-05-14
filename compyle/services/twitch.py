@@ -54,10 +54,11 @@ class TwitchApi(Routable):
         return header
 
     def get_new_access_token(self) -> Any:
-        """Gets a new client access token from Twitch API.
+        """Gets a new client access token from Twitch API following the Client Credentials Grant Flow.
 
         See:
             https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#getting-oauth-access-tokens
+            https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#client-credentials-grant-flow
 
         Example:
             >>> self.get_new_access_token()

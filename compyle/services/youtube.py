@@ -1,42 +1,18 @@
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from os import getenv
 from typing import Dict, List, Optional, Tuple
+from urllib.parse import parse_qs, urlparse
+import webbrowser
+
 from compyle.services.routing import Routable
-from compyle.utils.enums import Enum
 from compyle.utils.descriptors import deserialize
+from compyle.utils.enums import Enum
 
 
 class PrivacyStatus(Enum):
     PUBLIC = "public"
     PRIVATE = "private"
     UNLISTED = "unlisted"
-
-
-routes = {
-    "auth": {
-        "base_url": "https://accounts.google.com/o/oauth2/v2/",
-        "slug": "auth",
-        "req": ["client_id", "scope", "response_type", "redirect_uri"],
-        "opt": ["access_type", "include_granted_scopes", "state", "login_hint", "prompt"],
-    },
-    "token": {
-        "base_url": "https://oauth2.googleapis.com/",
-        "slug": "token",
-        "req": ["client_id", "client_secret", "code", "grant_type", "redirect_uri"],
-    },
-    "categories": {
-        "base_url": "https://www.googleapis.com/youtube/v3/",
-        "slug": "videoCategories",
-        "req": ["part"],
-        "opt": ["id", "regionCode"],
-    },
-    "upload": {
-        "base_url": "https://www.googleapis.com/upload/youtube/v3",
-        "slug": "videos",
-    },
-}
-
-# https://www.googleapis.com/auth/youtube.upload
-from compyle.preloader import launch_after_preload
 
 
 class YoutubeApi(Routable):
@@ -49,23 +25,23 @@ class YoutubeApi(Routable):
     def __init__(self):
         """Initializes a new instance of the Youtube API client."""
         # retrieves the routes description from the JSON file
-        super().__init__(routes)
+        super().__init__(deserialize("compyle/services/routes/youtube.json"))
 
         # retrieves the client id and secret redirect url from the environment variables
         self.client_id: Optional[str] = getenv("YOUTUBE_APP_CLIENT_ID")
         self.client_secret: Optional[str] = getenv("YOUTUBE_APP_CLIENT_SECRET")
-        self.redirect_url: str = getenv("YOUTUBE_APP_REDIRECT_URL", "http://localhost:3000")
+        self.redirect_uri: str = getenv("YOUTUBE_APP_REDIRECT_URI", "http://localhost:3000")
 
         # checks if the client id and secret are specified
         if not self.client_id or not self.client_secret:
             raise ValueError("The client id and secret must be specified in the environment variables.")
 
+        # retrieves the autorization code from authentification service
         user_email_address: Optional[str] = getenv("YOUTUBE_APP_EMAIL_ADDRESS")
         autorization_code: str = self.authentificate(user_email_address)
 
-        self.access_token = ""
-
-        print("access_token:", autorization_code)
+        code = input("Enter the authorization code: ")
+        self.access_token = self.get_access_token(code)
 
     # pylint: disable=line-too-long
     def authentificate(self, login_hint: str) -> str:
@@ -87,26 +63,38 @@ class YoutubeApi(Routable):
             "include_granted_scopes": "true",
             "response_type": "code",
             "state": "state_parameter_passthrough_value",
-            "redirect_uri": self.redirect_url,
+            "redirect_uri": self.redirect_uri,
             "prompt": "consent",
         }
-
-        # none -> access_denied, interaction_required
 
         if login_hint:
             params["login_hint"] = login_hint
 
-        # TODO 1 change redirect_uri to env variable
+        response = self.router.request("HEAD", "auth", {}, **params, return_json=False)
+        response_uri = response.headers.get("Location") or response.url
 
-        response = self.router.request("GET", "auth", {}, **params, return_json=False)
+        class RequestHandler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                code: str = parse_qs(urlparse(self.path).query)["code"][0]
+                self.send_response(200)
+                self.send_header("test", "text/html")
+                self.end_headers()
+                self.wfile.write(bytes(code, "utf-8"))
 
-        # The response is sent back to your application using the redirect URL you specified
-        print(response)
+        client_address = self.redirect_uri.rsplit(":", maxsplit=1)
+        client_address[0] = client_address[0].split("://", maxsplit=1)[1]
+        client_address[1] = int(client_address[1])
+        server = HTTPServer(tuple(client_address), RequestHandler)
+
+        webbrowser.open(response_uri, new=2)
+
+        server.handle_request()
+        server.server_close()
 
         return response
 
     def get_access_token(self, code: str):
-        """Retrieves the access token from the authorization code.
+        """Retrieves the access token from the authorization code following the Authorization Code Flow.
 
         See:
             https://developers.google.com/identity/protocols/oauth2/web-server?hl=en#httprest_3
@@ -119,7 +107,7 @@ class YoutubeApi(Routable):
             code (str): the authorization code.
 
         Returns:
-            _type_: _description_
+            str: the access token if the request was a success.
         """
         header = {"Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json"}
         params = {
@@ -127,13 +115,10 @@ class YoutubeApi(Routable):
             "client_secret": self.client_secret,
             "code": code,
             "grant_type": "authorization_code",
-            "redirect_uri": self.redirect_url,
+            "redirect_uri": self.redirect_uri,
         }
 
-        response = self.router.request("POST", "token", header, **params)
-        print(response)
-
-        return response
+        return self.router.request("POST", "token", header, **params)["access_token"]
 
     def __request_header(self, *, acces_token: bool = True, **args) -> Dict[str, str]:
         """Constructs and returns the request header.
@@ -151,12 +136,6 @@ class YoutubeApi(Routable):
             header["Authorization"] = f"Bearer {self.access_token}"
 
         return header
-
-    #     curl \
-    #   'https://youtube.googleapis.com/youtube/v3/videoCategories?part=snippet&regionCode=FR&key=[YOUR_API_KEY]' \
-    #   --header 'Authorization: Bearer [YOUR_ACCESS_TOKEN]' \
-    #   --header 'Accept: application/json' \
-    #   --compressed
 
     def get_categories(self, region_code: str = "FR") -> List[Tuple[str, int]]:
         """Retrieves the list of categories in the region specified by the region_code in the format ISO 3166-1 alpha-2.
@@ -194,23 +173,34 @@ class YoutubeApi(Routable):
         return True
 
     def upload_video(self, filename, title, description, tags, category):
+        """_summary_
+
+        See:
+            https://developers.google.com/youtube/v3/guides/uploading_a_video?hl=en
+
+        Args:
+            filename (_type_): _description_
+            title (_type_): _description_
+            description (_type_): _description_
+            tags (_type_): _description_
+            category (_type_): _description_
+        """
         # 256 Go
         # Types MIME de médias acceptés : video/*, application/octet-stream
+
+        # TODO Resumable Uploads Proto
+        # https://developers.google.com/youtube/v3/guides/using_resumable_upload_protocol?hl=fr
+        header = self.__request_header()
 
         body = {
             "snippet": {"title": title, "description": description, "tags": tags, "categoryId": category},
             "status": {"privacyStatus": PrivacyStatus.PRIVATE},
         }
+        files = None
+        values = {"DB": "photcat", "OUT": "csv", "SHORT": "short"}
+        with open("file.txt", "rb") as file:
+            files = {"upload_file": file}
 
+        # r = requests.post(url, files=files, data=values)
         # part = snippet,status
         # notifySubscribers = True
-
-
-def test():
-    youtube_api = YoutubeApi()
-    print(youtube_api.router.get_registered())
-    print(youtube_api.get_access_token("4/0AbUR2VPle4b03UTNgrE6LOak8sBrNSOxYPTeCvwYPD8WpEnJrtNZyFUzD1NOQRzgEqAl2w"))
-
-
-if __name__ == "__main__":
-    launch_after_preload(test)

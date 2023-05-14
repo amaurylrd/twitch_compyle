@@ -312,8 +312,6 @@ class Router:
         if method not in Method.__members__:
             raise ValueError(f"Invalid method {method}, expected one of {Method.__keys__}")
 
-        print(url)
-
         try:
             response: requests.Response = Method[method](
                 url, headers={k.upper(): v for k, v in header.items()}, timeout=None
