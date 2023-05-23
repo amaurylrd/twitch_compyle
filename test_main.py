@@ -7,7 +7,8 @@ from typing import Any, Dict
 import toml
 
 from compyle.actions import *
-from compyle.preloader import launch_after_preload
+
+# from compyle.preloader import launch_after_preload
 
 DEFAULT_REPORT_FOLDER = "reports/"
 DEFAULT_VIDEO_FOLDER = "videos/"
@@ -122,4 +123,5 @@ def main():
 
 
 if __name__ == "__main__":
-    launch_after_preload(main)  # TODO change that to settings.py
+    main()
+    # launch_after_preload(main)  # TODO change that to settings.py

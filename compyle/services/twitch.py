@@ -1,11 +1,11 @@
 import datetime
-from os import getenv
 from typing import Any, Dict, List, Optional
 
 from requests import HTTPError
 
 from compyle.services.routing import Routable
 from compyle.utils.descriptors import deserialize
+from compyle.settings import TWITCH
 
 
 class TwitchApi(Routable):
@@ -22,8 +22,8 @@ class TwitchApi(Routable):
         super().__init__(deserialize("compyle/services/routes/twitch.json"))
 
         # retrieves the client id and secret from the environment variables
-        self.client_id: Optional[str] = getenv("TWITCH_APP_CLIENT_ID")
-        self.client_secret: Optional[str] = getenv("TWITCH_APP_CLIENT_SECRET")
+        self.client_id: Optional[str] = TWITCH["client_id"]
+        self.client_secret: Optional[str] = TWITCH["client_secret"]
 
         # checks if the client id and secret are specified
         if not self.client_id or not self.client_secret:

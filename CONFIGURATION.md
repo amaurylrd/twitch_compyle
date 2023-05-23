@@ -9,7 +9,7 @@ In short, using a `.env` file will enable you to use environment variables for l
 
 ### Usage
 
-See the `.env.example` file for more details. You can start by copying it to `.env` and filling the values with the following command:
+See the `.env.sample` file for more details. You can start by copying it to `.env` and filling the values with the following command:
 
 ```sh
 cp .env.sample .env

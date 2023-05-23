@@ -1,10 +1,10 @@
 import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from os import getenv
 from typing import Dict, List, Optional, Tuple
 from urllib.parse import parse_qs, urlparse
 
 from compyle.services.routing import Routable
+from compyle.settings import YOUTUBE
 from compyle.utils.descriptors import deserialize
 from compyle.utils.enums import Enum
 
@@ -28,16 +28,16 @@ class YoutubeApi(Routable):
         super().__init__(deserialize("compyle/services/routes/youtube.json"))
 
         # retrieves the client id and secret redirect url from the environment variables
-        self.client_id: Optional[str] = getenv("YOUTUBE_APP_CLIENT_ID")
-        self.client_secret: Optional[str] = getenv("YOUTUBE_APP_CLIENT_SECRET")
-        self.redirect_uri: str = getenv("YOUTUBE_APP_REDIRECT_URI", "http://localhost:3000")
+        self.client_id: Optional[str] = YOUTUBE["client_id"]
+        self.client_secret: Optional[str] = YOUTUBE["client_secret"]
+        self.redirect_uri: str = YOUTUBE["redirect_uri"]
 
         # checks if the client id and secret are specified
         if not self.client_id or not self.client_secret:
             raise ValueError("The client id and secret must be specified in the environment variables.")
 
         # retrieves the autorization code from authentification service
-        user_email_address: Optional[str] = getenv("YOUTUBE_APP_EMAIL_ADDRESS")
+        user_email_address: Optional[str] = YOUTUBE["client_email"]
         autorization_code: str = self.authentificate(user_email_address)
 
         code = input("Enter the authorization code: ")
