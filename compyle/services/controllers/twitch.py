@@ -3,9 +3,12 @@ from typing import Any, Dict, List, Optional
 
 from requests import HTTPError
 
-from compyle.services.routing import Routable
+from compyle.services.controllers.routing import Routable
+from compyle.settings import TWITCH_APP
 from compyle.utils.descriptors import deserialize
-from compyle.settings import TWITCH
+from compyle.utils.types import Singleton
+
+APP_ROUTES: str = "compyle/services/controllers/routes/twitch.json"
 
 
 class TwitchApi(Routable):
@@ -16,14 +19,16 @@ class TwitchApi(Routable):
         https://dev.twitch.tv/docs/api/migration/ for endpoints equivalence.
     """
 
+    __metaclass__ = Singleton
+
     def __init__(self):
         """Initializes a new instance of the Twitch API client."""
         # retrieves the routes from the JSON file
-        super().__init__(deserialize("compyle/services/routes/twitch.json"))
+        super().__init__(deserialize(APP_ROUTES))
 
         # retrieves the client id and secret from the environment variables
-        self.client_id: Optional[str] = TWITCH["client_id"]
-        self.client_secret: Optional[str] = TWITCH["client_secret"]
+        self.client_id: Optional[str] = TWITCH_APP["client_id"]
+        self.client_secret: Optional[str] = TWITCH_APP["client_secret"]
 
         # checks if the client id and secret are specified
         if not self.client_id or not self.client_secret:
@@ -32,7 +37,7 @@ class TwitchApi(Routable):
         # generates a new client access token
         self.access_token: str = self.get_new_access_token()
 
-    def __request_header(self, *, client_id: bool = True, acces_token: bool = True, **args):  # Dict[str, str]
+    def __request_header(self, *, client_id: bool = True, acces_token: bool = True, **args) -> Dict[str, str]:
         """Constructs and returns the request header.
 
         Args:

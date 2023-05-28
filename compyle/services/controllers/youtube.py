@@ -3,13 +3,17 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Dict, List, Optional, Tuple
 from urllib.parse import parse_qs, urlparse
 
-from compyle.services.routing import Routable
-from compyle.settings import YOUTUBE
+from compyle.services.controllers.routing import Routable
+from compyle.settings import YOUTUBE_APP
 from compyle.utils.descriptors import deserialize
-from compyle.utils.enums import Enum
+from compyle.utils.types import Enum, Singleton
+
+APP_ROUTES: str = "compyle/services/controllers/routes/youtube.json"
 
 
 class PrivacyStatus(Enum):
+    """Represents the upload privacy status for a video."""
+
     PUBLIC = "public"
     PRIVATE = "private"
     UNLISTED = "unlisted"
@@ -22,22 +26,24 @@ class YoutubeApi(Routable):
         https://console.cloud.google.com/apis/library/youtube.googleapis.com
     """
 
+    __metaclass__ = Singleton
+
     def __init__(self):
         """Initializes a new instance of the Youtube API client."""
         # retrieves the routes description from the JSON file
-        super().__init__(deserialize("compyle/services/routes/youtube.json"))
+        super().__init__(deserialize(APP_ROUTES))
 
         # retrieves the client id and secret redirect url from the environment variables
-        self.client_id: Optional[str] = YOUTUBE["client_id"]
-        self.client_secret: Optional[str] = YOUTUBE["client_secret"]
-        self.redirect_uri: str = YOUTUBE["redirect_uri"]
+        self.client_id: Optional[str] = YOUTUBE_APP["client_id"]
+        self.client_secret: Optional[str] = YOUTUBE_APP["client_secret"]
+        self.redirect_uri: str = YOUTUBE_APP["redirect_uri"]
 
         # checks if the client id and secret are specified
         if not self.client_id or not self.client_secret:
             raise ValueError("The client id and secret must be specified in the environment variables.")
 
         # retrieves the autorization code from authentification service
-        user_email_address: Optional[str] = YOUTUBE["client_email"]
+        user_email_address: Optional[str] = YOUTUBE_APP["client_email"]
         autorization_code: str = self.authentificate(user_email_address)
 
         code = input("Enter the authorization code: ")
@@ -81,9 +87,11 @@ class YoutubeApi(Routable):
                 self.end_headers()
                 self.wfile.write(bytes(code, "utf-8"))
 
+        # x = urlparse("self.redirect_uri").hostname
+
         client_address = self.redirect_uri.rsplit(":", maxsplit=1)
         client_address[0] = client_address[0].split("://", maxsplit=1)[1]
-        client_address[1] = int(client_address[1])
+        client_address[1] = int(client_address[1]) if len(client_address) > 1 else 80
         server = HTTPServer(tuple(client_address), RequestHandler)
 
         webbrowser.open(response_uri, new=2)

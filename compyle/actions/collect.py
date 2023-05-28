@@ -2,7 +2,7 @@ import datetime
 import os
 from typing import Optional
 
-from compyle.services.twitch import TwitchApi
+from compyle.services.controllers.twitch import TwitchApi
 from compyle.utils.descriptors import serialize
 
 DEFAULT_FOLDER = "reports/"

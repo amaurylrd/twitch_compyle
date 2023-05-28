@@ -9,6 +9,15 @@ class Enum(_Enum):
         return cls.__members__.keys()
 
 
+class Singleton(type):
+    __instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in Singleton.__instances:
+            Singleton.__instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return Singleton.__instances[cls]
+
+
 # class Factory(type)
 # class NoPublicConstructor(type):
 #     """Metaclass that ensures a private constructor

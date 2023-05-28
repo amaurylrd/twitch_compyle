@@ -9,7 +9,7 @@ from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 import requests
 from rest_framework import status
 
-from compyle.utils.enums import Enum
+from compyle.utils.types import Enum
 
 LOGGER = logging.getLogger(__name__)
 

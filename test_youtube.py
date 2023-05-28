@@ -1,5 +1,5 @@
 from compyle.preloader import launch_after_preload
-from compyle.services.youtube import YoutubeApi
+from compyle.services.controllers.youtube import YoutubeApi
 
 
 def test():
