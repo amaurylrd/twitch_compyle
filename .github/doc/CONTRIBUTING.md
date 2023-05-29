@@ -46,7 +46,7 @@ black compyle/<path_to_directory_or_file>
 pylama compyle/<path_to_directory_or_file>
 ```
 
-You are also strongly encouraged to keep the git trace as clean as possible with for example consice commits that are expected to start with one in feature, bugfix, update, release, or anything that gives a short and comprehensible hint on the content.
+You are also strongly encouraged to keep the git trace as clean as possible with for example consice commits that are expected to start with one in feature, bugfix, update, release, or anything that gives a short and comprehensible hint on the content, even for small additions.
 
 You can also make use of the provided git commands that can help in direct link with the previous point, such as **squashing** (with ``git rebase``) or **ammending** (with ``git commit --amend --no-edit``).
 

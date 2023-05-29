@@ -21,6 +21,7 @@ TWITCH_APP: Dict[str, Optional[str]] = {
 }
 
 # environment variables for the mongo database
-MONGO_DB: Dict[str, Optional[str]] = {
+MONGO_DB: Dict[str, str] = {
     "client_uri": getenv("MONGO_DB_URI", "mongodb://localhost:27017/"),
+    "client_name": getenv("MONGO_DB_NAME", "compyle"),
 }

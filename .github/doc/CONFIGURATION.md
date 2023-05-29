@@ -21,6 +21,7 @@ See below the table of expected variables:
 |-----------------------------|---------|-------------------------------------|---------|--------------------------------|
 | `DEBUG`                     | boolean | the debug mode flag (max verbosity) | global  | -                              |
 | `MONGO_DB_URI`              | string  | the MongoDB connection uri          | global  | `MONGO_DB["client_uri"]`       |
+| `MONGO_DB_NAME`             | string  | the MongoDB database name           | global  | `MONGO_DB["client_name"]`      |
 | `YOUTUBE_APP_CLIENT_ID`     | string  | the Youtube client id               | publish | `YOUTUBE_APP["client_id"]`     |
 | `YOUTUBE_APP_CLIENT_SECRET` | string  | the Youtube client secret           | publish | `YOUTUBE_APP["client_secret"]` |
 | `YOUTUBE_APP_REDIRECT_URI`  | string  | the Youtube redirect uri            | publish | `YOUTUBE_APP["redirect_uri"]`  | 

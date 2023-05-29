@@ -6,9 +6,9 @@
 
 ## Keywords
 
-APIs, Twitch, Youtube, MoviePy, OpenCV...
+APIs, Twitch, Youtube, MoviePy, OpenCV, MongoDB...
 
-![test](\doc\media\twitch-youtube-logo-banner.jpg)
+![](.github/doc/media/twitch-youtube-logo-banner.jpg)
 
 ## Requierements
 
@@ -50,7 +50,7 @@ poetry lock
 poetry install --sync
 ```
 
-Secondly refer to the [configuration guide](doc/CONFIGURATION.md) for a documentated overview on how to configure the ``.env`` file.
+Secondly refer to the [configuration guide](.github/doc/CONFIGURATION.md) for a documentated overview on how to configure the ``.env`` file.
 
 ### Run
 
@@ -64,7 +64,7 @@ python sources/main.py -h
 
 ### 🚧 Contribution
 
-If you are intrested in the project, check the [development manual](doc/DEVELOPMENT.md).
+If you are intrested in the project, check the [development manual](.github/doc/CONTRIBUTING.md).
 Please review this guide for further information on how to get started on the project for developpers and contributors.
 
 ### 📫 Contact
