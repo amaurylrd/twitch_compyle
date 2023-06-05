@@ -20,12 +20,12 @@ See below the table of expected variables:
 | environment variable        | type    | description                         | scope   | python setting                 |
 |-----------------------------|---------|-------------------------------------|---------|--------------------------------|
 | `DEBUG`                     | boolean | the debug mode flag (max verbosity) | global  | -                              |
-| `MONGO_DB_URI`              | string  | the MongoDB connection uri          | global  | `MONGO_DB["client_uri"]`       |
-| `MONGO_DB_NAME`             | string  | the MongoDB database name           | global  | `MONGO_DB["client_name"]`      |
-| `YOUTUBE_APP_CLIENT_ID`     | string  | the Youtube client id               | publish | `YOUTUBE_APP["client_id"]`     |
-| `YOUTUBE_APP_CLIENT_SECRET` | string  | the Youtube client secret           | publish | `YOUTUBE_APP["client_secret"]` |
-| `YOUTUBE_APP_REDIRECT_URI`  | string  | the Youtube redirect uri            | publish | `YOUTUBE_APP["redirect_uri"]`  | 
-| `YOUTUBE_APP_EMAIL_ADDRESS` | string  | the authorized email for consent    | publish | `YOUTUBE_APP["client_email"]`  | 
-| `TWITCH_APP_CLIENT_ID`      | string  | the Twitch client id                | collect | `TWITCH_APP["client_id"]`      | 
-| `TWITCH_APP_CLIENT_SECRET`  | string  | the Twitch client secret            | collect | `TWITCH_APP["client_secret"]`  |
-| `TWITCH_APP_REDIRECT_URI`   | string  | the Twitch redirect uri             | collect | `TWITCH_APP["redirect_uri"]`   |
+| `MONGO_DB_URI`              | string  | the MongoDB connection uri          | global  | `MONGO_CONFIG.client_uri`      |
+| `MONGO_DB_NAME`             | string  | the MongoDB database name           | global  | `MONGO_CONFIG.client_name`     |
+| `YOUTUBE_APP_CLIENT_ID`     | string  | the Youtube client id               | publish | `YOUTUBE_CONFIG.client_id`     |
+| `YOUTUBE_APP_CLIENT_SECRET` | string  | the Youtube client secret           | publish | `YOUTUBE_CONFIG.client_secret` |
+| `YOUTUBE_APP_REDIRECT_URI`  | string  | the Youtube redirect uri            | publish | `YOUTUBE_CONFIG.redirect_uri`  | 
+| `YOUTUBE_APP_EMAIL_ADDRESS` | string  | the authorized email for consent    | publish | `YOUTUBE_CONFIG.client_email`  | 
+| `TWITCH_APP_CLIENT_ID`      | string  | the Twitch client id                | collect | `TWITCH_CONFIG.client_id`      | 
+| `TWITCH_APP_CLIENT_SECRET`  | string  | the Twitch client secret            | collect | `TWITCH_CONFIG.client_secret`  |
+| `TWITCH_APP_REDIRECT_URI`   | string  | the Twitch redirect uri             | collect | `TWITCH_CONFIG.redirect_uri`   |

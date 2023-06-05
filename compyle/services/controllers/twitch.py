@@ -4,14 +4,14 @@ from typing import Any, Dict, List, Optional
 from requests import HTTPError
 
 from compyle.services.controllers.routing import Routable
-from compyle.settings import TWITCH_APP
+from compyle.settings import TWITCH_CONFIG
 from compyle.utils.descriptors import deserialize
 from compyle.utils.types import Singleton
 
 APP_ROUTES: str = "compyle/services/controllers/routes/twitch.json"
 
 
-class TwitchApi(Routable):
+class TwitchAPI(Routable):
     """This class implements the Twitch API legacy client v5 and OAuth 2.0 for authentication.
 
     See:
@@ -21,14 +21,19 @@ class TwitchApi(Routable):
 
     __metaclass__ = Singleton
 
-    def __init__(self):
-        """Initializes a new instance of the Twitch API client."""
+    def __init__(self, client_id: Optional[str] = None, client_secret: Optional[str] = None):
+        """Initializes a new instance of the Twitch API client.
+
+        Params:
+            client_id (Optional[str]): The client id of the Twitch application. Defaults to None.
+            client_secret (Optional[str]): The client secret of the Twitch application. Defaults to None.
+        """
         # retrieves the routes from the JSON file
         super().__init__(deserialize(APP_ROUTES))
 
-        # retrieves the client id and secret from the environment variables
-        self.client_id: Optional[str] = TWITCH_APP["client_id"]
-        self.client_secret: Optional[str] = TWITCH_APP["client_secret"]
+        # retrieves the client id and secret either from the signature parameters or from the environment variables
+        self.client_id: Optional[str] = client_id or TWITCH_CONFIG.client_id
+        self.client_secret: Optional[str] = client_secret or TWITCH_CONFIG.client_secret
 
         # checks if the client id and secret are specified
         if not self.client_id or not self.client_secret:
@@ -222,6 +227,7 @@ class TwitchApi(Routable):
                         and abs(clip["vod_offset"] - c["vod_offset"]) <= max(clip["duration"], c["duration"])
                         for c in clips
                     ):
+                        clip["clip_url"] = self.get_clip_url(clip)
                         clips.append(clip)
 
                         # stops the parsing if enough clips were found

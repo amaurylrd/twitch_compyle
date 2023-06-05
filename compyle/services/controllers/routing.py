@@ -12,6 +12,7 @@ from rest_framework import status
 from compyle.utils.types import Enum
 
 LOGGER = logging.getLogger(__name__)
+logging.getLogger("urllib3.connectionpool").setLevel(logging.WARNING)
 
 
 class Endpoint:

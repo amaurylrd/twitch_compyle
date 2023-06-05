@@ -1,3 +1,10 @@
+import os
+
+import pytest
+
+import compyle.settings as settings
+from compyle.services.databases.mongo import MongoDB
+
 # x = {
 #     "type": "object",
 #     "properties": {
@@ -26,7 +33,9 @@
 # print(json.dumps(x, indent=4))
 #     print(json.dumps(schema, indent=4))
 
-from compyle.services.databases.mongo import MongoDB
 
 if __name__ == "__main__":
     mongo = MongoDB()
+    json = {"test1": "test"}
+    collection = "clips"
+    mongo.insert_document(collection, json)

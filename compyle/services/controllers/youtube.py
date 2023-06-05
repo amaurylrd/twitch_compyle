@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Tuple
 from urllib.parse import parse_qs, urlparse
 
 from compyle.services.controllers.routing import Routable
-from compyle.settings import YOUTUBE_APP
+from compyle.settings import YOUTUBE_CONFIG
 from compyle.utils.descriptors import deserialize
 from compyle.utils.types import Enum, Singleton
 
@@ -19,7 +19,7 @@ class PrivacyStatus(Enum):
     UNLISTED = "unlisted"
 
 
-class YoutubeApi(Routable):
+class YoutubeAPI(Routable):
     """This class implements the Youtube data API v3 and OAuth 2.0 for authentication.
 
     See:
@@ -28,29 +28,39 @@ class YoutubeApi(Routable):
 
     __metaclass__ = Singleton
 
-    def __init__(self):
-        """Initializes a new instance of the Youtube API client."""
+    def __init__(
+        self, client_id: Optional[str] = None, client_secret: Optional[str] = None, redirect_uri: Optional[str] = None
+    ):
+        """Initializes a new instance of the Youtube API client.
+
+        Params:
+            client_id (Optional[str]): The client id of the Youtube application. Defaults to None.
+            client_secret (Optional[str]): The client secret of the Youtube application. Defaults to None.
+            redirect_uri (Optional[str]): The redirect uri of the Youtube application. Defaults to None.
+        """
         # retrieves the routes description from the JSON file
         super().__init__(deserialize(APP_ROUTES))
 
-        # retrieves the client id and secret redirect url from the environment variables
-        self.client_id: Optional[str] = YOUTUBE_APP["client_id"]
-        self.client_secret: Optional[str] = YOUTUBE_APP["client_secret"]
-        self.redirect_uri: str = YOUTUBE_APP["redirect_uri"]
+        # retrieves the client id and secret either from the parameters or the environment variables
+        self.client_id: Optional[str] = client_id or YOUTUBE_CONFIG.client_id
+        self.client_secret: Optional[str] = client_secret or YOUTUBE_CONFIG.client_secret
 
         # checks if the client id and secret are specified
         if not self.client_id or not self.client_secret:
             raise ValueError("The client id and secret must be specified in the environment variables.")
 
+        # retrieves the redirect uri and client email either from the paramters or from the environment variables
+        self.redirect_uri: str = redirect_uri or YOUTUBE_CONFIG.redirect_uri
+        user_email_address: Optional[str] = YOUTUBE_CONFIG.client_email
+
         # retrieves the autorization code from authentification service
-        user_email_address: Optional[str] = YOUTUBE_APP["client_email"]
         autorization_code: str = self.authentificate(user_email_address)
 
         code = input("Enter the authorization code: ")
         self.access_token = self.get_access_token(code)
 
     # pylint: disable=line-too-long
-    def authentificate(self, login_hint: str) -> str:
+    def authentificate(self, login_hint: Optional[str] = None) -> str:
         """Redirect the user to Google's OAuth 2.0 server to initiate the authentication and authorization process.
         Google's OAuth 2.0 server authenticates the user and obtains consent from the user for your application to access the requested scopes.
         The response is sent back to your application using the redirect URL you specified.
@@ -58,6 +68,9 @@ class YoutubeApi(Routable):
         See:
             https://developers.google.com/identity/protocols/oauth2/web-server?hl=en#httprest_2
             https://developers.google.com/identity/protocols/oauth2/scopes#youtube for scopes
+
+        Params:
+            login_hint (Optional[str]): the email address of the user to log in. Defaults to None.
 
         Returns:
             str: the authorization code
