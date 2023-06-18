@@ -31,12 +31,11 @@ def get_latest_file(path: os.PathLike) -> Optional[str]:
     return None
 
 
-def edit(*, input: Optional[str] = None, output: Optional[str] = None):
-
-    if input is None:
+def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
+    if _input is None:
         # loads data from the database
-        mongo_db = MongoDB()
-        clips = mongo_db.get_documents("clips")  # todo filter ceux non utilisé pour des clips
+        with MongoDB() as mongo_db:
+            clips = mongo_db.get_documents("clips")  # todo filter ceux non utilisé pour des clips
 
         pass
     else:

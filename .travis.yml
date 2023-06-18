@@ -20,7 +20,7 @@ jobs:
       name: "Pylama"
       script:
         - poetry run pylama
-    
+
     - stage: lint
       name: "Bandit"
       script:

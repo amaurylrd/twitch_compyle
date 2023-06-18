@@ -10,7 +10,7 @@ APIs, Twitch, Youtube, MoviePy, OpenCV, MongoDB...
 
 ![](.github/doc/media/twitch-youtube-logo-banner.jpg)
 
-## Requierements
+## Requirements
 
 1. Python, at least 3.8
 
@@ -20,10 +20,10 @@ APIs, Twitch, Youtube, MoviePy, OpenCV, MongoDB...
 1. ImageMagick <br>
 <https://imagemagick.org/script/download.php>
 
-:warning: Once you have installed it, ImageMagick should be automatically detected by MoviePy, except for some developpers under specific OS:
+:warning: Once you have installed it, ImageMagick should be automatically detected by MoviePy, except for some developers under specific OS:
 
 - for **windows users**, you may also set the variable _IMAGEMAGICK_BINARY_ from the moviepy config file. To avoid doing so, make sure to check _"install legacy utilities"_ in the installation wizard.
-  
+
 - for **ubuntu users (≥ 19.04)**, you may have installed from [apt://imagemagick]() (or via the apt install command line), then you need to disable this line ``<policy domain="path" rights="none" pattern="@*"/>`` from the security policy file located at ``/etc/ImageMagick/policy.xml``.
 
 > MoviePy additionally depends on the Python modules Numpy, imageio, Decorator, and tqdm, which will be automatically installed during MoviePy’s installation but it also needs extra common libraries like PIL, FFMPEG for specific usecases...
@@ -64,11 +64,11 @@ python sources/main.py -h
 
 ### 🚧 Contribution
 
-If you are intrested in the project, check the [development manual](.github/doc/CONTRIBUTING.md).
-Please review this guide for further information on how to get started on the project for developpers and contributors.
+If you are interested in the project, check the [development manual](.github/doc/CONTRIBUTING.md).
+Please review this guide for further information on how to get started on the project for developers and contributors.
 
 ### 📫 Contact
-  
+
 Tho we like postcards, we prefer emails : [@adesvall](https://github.com/adesvall), [@amaurylrd](https://github.com/amaurylrd) (owner), [@thomasabreudias](https://github.com/ThomasAbreuDias)
 
 ## License

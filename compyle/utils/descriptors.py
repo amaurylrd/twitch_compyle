@@ -11,7 +11,7 @@ def deserialize(path: str) -> Any:
     Returns:
         Any: the loaded JSON object.
     """
-    with open(path, "r", encoding="utf-8") as file:
+    with open(path, encoding="utf-8") as file:
         return json.load(file)
 
 

@@ -49,11 +49,11 @@ class YoutubeAPI(Routable):
         if not self.client_id or not self.client_secret:
             raise ValueError("The client id and secret must be specified in the environment variables.")
 
-        # retrieves the redirect uri and client email either from the paramters or from the environment variables
+        # retrieves the redirect uri and client email either from the parameters or from the environment variables
         self.redirect_uri: str = redirect_uri or YOUTUBE_CONFIG.redirect_uri
         user_email_address: Optional[str] = YOUTUBE_CONFIG.client_email
 
-        # retrieves the autorization code from authentification service
+        # retrieves the authorization code from authentication service
         autorization_code: str = self.authentificate(user_email_address)
 
         code = input("Enter the authorization code: ")

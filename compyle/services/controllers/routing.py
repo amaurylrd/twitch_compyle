@@ -37,7 +37,7 @@ class Endpoint:
                 raise TypeError(f"String expected, wrong type provided at position {i}, found {type(arg)}")
 
             args[i] = arg.strip()
-            # slug devrait etre opt, par defaut ""
+            # slug devrait etre opt, par default ""
             if not args[i]:
                 raise ValueError(f"Non-empty string expected, wrong value provided at position {i}")
 

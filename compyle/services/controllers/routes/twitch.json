@@ -1,33 +1,53 @@
 {
-    "status": "https://devstatus.twitch.tv/",
-    "auth": {
-        "base_url": "https://id.twitch.tv/oauth2",
-        "slug": "/token",
-        "req": ["client_id", "client_secret", "grant_type"]
-    },
-    "validate": {
-        "base_url": "https://id.twitch.tv/oauth2",
-        "slug": "/validate"
-    },
-    "games": {
-        "base_url": "https://api.twitch.tv/helix",
-        "slug": "/games",
-        "opt": ["after", "before", "first"]
-    },
-    "game": {
-        "base_url": "https://api.twitch.tv/helix",
-        "slug": "/games",
-        "req": ["name"]
-    },
-    "clips": {
-        "base_url": "https://api.twitch.tv/helix",
-        "slug": "/clips",
-        "req": ["game_id"],
-        "opt": ["started_at", "ended_at", "before", "first", "after"]
-    },
-    "clip": {
-        "base_url": "https://api.twitch.tv/helix",
-        "slug": "/clips",
-        "req": ["id"]
-    }
+  "status": "https://devstatus.twitch.tv/",
+  "auth": {
+    "base_url": "https://id.twitch.tv/oauth2",
+    "slug": "/token",
+    "req": [
+      "client_id",
+      "client_secret",
+      "grant_type"
+    ]
+  },
+  "validate": {
+    "base_url": "https://id.twitch.tv/oauth2",
+    "slug": "/validate"
+  },
+  "games": {
+    "base_url": "https://api.twitch.tv/helix",
+    "slug": "/games",
+    "opt": [
+      "after",
+      "before",
+      "first"
+    ]
+  },
+  "game": {
+    "base_url": "https://api.twitch.tv/helix",
+    "slug": "/games",
+    "req": [
+      "name"
+    ]
+  },
+  "clips": {
+    "base_url": "https://api.twitch.tv/helix",
+    "slug": "/clips",
+    "req": [
+      "game_id"
+    ],
+    "opt": [
+      "started_at",
+      "ended_at",
+      "before",
+      "first",
+      "after"
+    ]
+  },
+  "clip": {
+    "base_url": "https://api.twitch.tv/helix",
+    "slug": "/clips",
+    "req": [
+      "id"
+    ]
+  }
 }

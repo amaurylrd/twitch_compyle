@@ -8,13 +8,14 @@ from compyle.utils.descriptors import serialize
 
 
 # TODO > game_name et period des settings
+# pylint: disable=line-too-long
 def collect(*, output: Optional[str] = None, game_name: str = "League of Legends", period: int = 2):
     """Collects the clips for the specified game and period via the Twitch public API.
 
     Args:
-        output (Optional[str], optional): the destination path where to store the clips data. Defaults to None.
+        output (Optional[str], optional): the destination path where to store the clips data. Defaults to None. If None, the clips data will be stored in the mongoDB database.
         game_name (str, optional): the name of the game to retrieve the clips from. Defaults to "League of Legends".
-        period (int, optional): the period in days to retrieve the clips from. Defaults to 2.
+        period (int, optional): the past period (in days) to retrieve the clips from. Defaults to 2.
     """
     # initializes the Twitch API client
     twitch_api = TwitchAPI()
@@ -25,8 +26,8 @@ def collect(*, output: Optional[str] = None, game_name: str = "League of Legends
 
     if not output:
         # stores the clips data to the database
-        mongo_db = MongoDB()
-        mongo_db.insert_documents("clips", clips)
+        with MongoDB() as mongo_db:
+            mongo_db.insert_documents("clips", clips)
     else:
         # stores the clips data in the filesystem
         if output.endswith("/") or os.path.isdir(output):

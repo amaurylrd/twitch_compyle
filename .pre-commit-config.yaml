@@ -1,0 +1,102 @@
+default_stages: [commit]
+default_language_version:
+  node: "16.16.0"
+  python: "python3.10"
+
+exclude: '.vscode/'
+
+repos:
+  - repo: https://github.com/MarcoGorelli/absolufy-imports
+    rev: "v0.3.1"
+    hooks:
+      - id: absolufy-imports
+
+  - repo: https://github.com/ambv/black
+    rev: "23.3.0"
+    hooks:
+      - id: black
+        language_version: python3.10
+
+  - repo: https://github.com/gvanderest/pylama-pre-commit
+    rev: "0.1.2"
+    hooks:
+      - id: pylama
+        args:
+          - --max-line-length=120
+        additional_dependencies: [toml, mypy, eradicate, pydocstyle==6.1.1]
+
+  - repo: https://github.com/pycqa/isort
+    rev: "5.12.0"
+    hooks:
+      - id: isort
+        args: ["-m=VERTICAL_HANGING_INDENT", "--combine-as", "--profile=black"]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: "v4.4.0"
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-ast
+      - id: check-yaml
+      - id: check-toml
+      - id: check-symlinks
+      - id: check-executables-have-shebangs
+      - id: sort-simple-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: pretty-format-json
+        args:
+          - "--autofix"
+          - "--indent=2"
+          - "--no-sort-keys"
+          - "--no-ensure-ascii"
+
+  - repo: https://gitlab.com/smop/pre-commit-hooks
+    rev: master
+    hooks:
+      -   id: validate_manifest
+
+  - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
+    rev: "v1.3.1"
+    hooks:
+      - id: python-safety-dependencies-check
+        files: pyproject.toml
+        args:
+          - "--disable-audit-and-monitor"
+          - "--ignore=54229,54230,42923"
+
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: "v1.10.0"
+    hooks:
+      - id: python-no-log-warn
+      - id: python-check-mock-methods
+      - id: python-no-eval
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: "1.7.5"
+    hooks:
+      - id: bandit
+        args: ["-c", "pyproject.toml"]
+        additional_dependencies: ["bandit[toml]"]
+        files: "^compyle/.*"
+
+  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+    rev: v9.5.0
+    hooks:
+      - id: commitlint
+        stages: [commit-msg]
+        additional_dependencies: ["@commitlint/config-angular"]
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: "v2.2.4"
+    hooks:
+      - id: codespell
+        require_serial: false
+        args: ["-w", "-S", ".vscode/*,poetry.*"]
+        additional_dependencies: ["tomli"]
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.4.0
+    hooks:
+      - id: pyupgrade

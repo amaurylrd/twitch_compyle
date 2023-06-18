@@ -1,11 +1,11 @@
 import argparse
+import inspect
 import logging
+import pathlib
 
 # import pathlib
 from os import getenv
-import os
-import pathlib
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import toml
 
@@ -23,9 +23,9 @@ def main():
     levels = (logging.WARNING, logging.INFO, logging.DEBUG)
 
     # extracts the project infos from the pyproject.toml file
-    with open("pyproject.toml", "r", encoding="utf-8") as file:
+    with open("pyproject.toml", encoding="utf-8") as file:
         section: Dict[str, Any] = toml.load(file)["tool"]["poetry"]
-        name, description, version = [keyword for keyword in section if keyword in ["name", "description", "version"]]
+        name, description, version = (keyword for keyword in section if keyword in ["name", "description", "version"])
 
     # creates the parser for the program arguments
     parser = argparse.ArgumentParser(description=description, epilog=f"{name} {version}")
@@ -43,27 +43,37 @@ def main():
 
     # the parser for the command 'collect'
     parser_collect: argparse.ArgumentParser = subparser.add_parser(
-        "collect", aliases=["c"], description="TODO", formatter_class=argparse.RawTextHelpFormatter
-    )  # TODO description
+        "collect",
+        aliases=["c"],
+        description=inspect.cleandoc(
+            """
+            collect:
+                1) retrieve clips data from the public Twitch API
+                2) parse, select and normalize the data
+                3) save the parsed result in MongoDB database or file
+            """
+        ),
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
     parser_collect.set_defaults(func=collect.collect)
     parser_collect.add_argument(
         "-out",
         "--output",
         type=pathlib.Path,  # TODO pathlib.Path doesn't keep the trailing slash
         metavar="FILE | DIRECTORY",
-        help="specifiy the output path where to store the report (all path elements will be created at need)",
+        help="specify the output path where to store the report (all path elements will be created at need)",
         default=argparse.SUPPRESS if getenv("MONGO_DB_URI") else DEFAULT_REPORT_FOLDER,
     )
 
     # the parser for the command 'edit'
-    parser_edit: argparse.ArgumentParser = subparser.add_parser("edit", aliases=["e"])
+    parser_edit: argparse.ArgumentParser = subparser.add_parser("edit", aliases=["e"])  # TODO add description
     parser_edit.set_defaults(func=None)  # TODO set the function
     parser_edit.add_argument(
         "-in",
         "--input",
         type=argparse.FileType("r", encoding="utf-8"),
         metavar="FILE | DIRECTORY",
-        help="specifiy the input path where to import the data from",
+        help="specify the input path where to import the data from",
         default=argparse.SUPPRESS if getenv("MONGO_DB_URI") else DEFAULT_REPORT_FOLDER,
     )
     parser_edit.add_argument(
@@ -71,19 +81,19 @@ def main():
         "--output",
         type=pathlib.Path,  # TODO pathlib.Path doesn't keep the trailing slash
         metavar="FILE | DIRECTORY",
-        help="specifiy the output path where to store the metafile about the video",
+        help="specify the output path where to store the metafile about the video",
         default=argparse.SUPPRESS if getenv("MONGO_DB_URI") else DEFAULT_VIDEO_FOLDER,
     )
 
     # the parser for the command 'publish'
-    parser_publish: argparse.ArgumentParser = subparser.add_parser("publish", aliases=["p"])
+    parser_publish: argparse.ArgumentParser = subparser.add_parser("publish", aliases=["p"])  # TODO add description
     parser_publish.set_defaults(func=None)  # TODO set the function
     parser_publish.add_argument(
         "-in",
         "--input",
         type=argparse.FileType("r", encoding="utf-8"),
         metavar="FILE | DIRECTORY",
-        help="specifiy the input path where to retrieve the video data from",
+        help="specify the input path where to retrieve the video data from",
         default=argparse.SUPPRESS if getenv("MONGO_DB_URI") else DEFAULT_VIDEO_FOLDER,
     )
 
