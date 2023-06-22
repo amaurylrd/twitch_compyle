@@ -1,0 +1,13 @@
+# name: Run Pylama
+# runs:
+#   using: composite
+#   steps:
+#     - run: poetry run pylama
+
+name: Run Pylama
+description: "BLABLA TEST"
+runs:
+  using: "composite"
+  steps:
+  - run: poetry run pylama
+    shell: bash

@@ -1,0 +1,5 @@
+name: Run Pylama
+runs:
+  using: composite
+  steps:
+    - run: poetry run pylama

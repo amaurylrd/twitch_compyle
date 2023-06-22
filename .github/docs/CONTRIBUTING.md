@@ -44,8 +44,8 @@ pylama compyle/
 black compyle/
 ```
 
-
-
+https://github.com/zeke/semantic-release-with-github-actions
+https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commits
 
 You are also strongly encouraged to keep the git trace as clean as possible with for example consice commits that are expected to start with one in feature, bugfix, update, release, or anything that gives a short and comprehensible hint on the content, even for small additions.
 

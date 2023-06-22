@@ -1,6 +1,6 @@
 <!-- markdownlint-disable MD029 MD041 MD042 MD045 -->
 
-[![Build Status](https://app.travis-ci.com/amaurylrd/twitch_compyle.svg?token=8zCbm6e8xiaKAE2XXKzm&branch=main)](https://app.travis-ci.com/amaurylrd/twitch_compyle) [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+v0.0.1 [![Build Status](https://app.travis-ci.com/amaurylrd/twitch_compyle.svg?token=8zCbm6e8xiaKAE2XXKzm&branch=main)](https://app.travis-ci.com/amaurylrd/twitch_compyle) [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![Read the Docs](https://img.shields.io/readthedocs/compyle?label=Read%20the%20Docs&logo=Read%20the%20Docs)](https://google.com)
 
 # $${Com \color{red} py \color{black} le}$$
 
@@ -8,11 +8,11 @@
 
 APIs, Twitch, Youtube, MoviePy, OpenCV, MongoDB...
 
-![](.github/doc/media/twitch-youtube-logo-banner.jpg)
+![](.github/docs/media/twitch-youtube-logo-banner.jpg)
 
 ## Requirements
 
-1. Python, at least 3.8
+1. Python, at least 3.10
 
 2. Poetry, any stable version since 1.2 but idealy requires 1.3 or above <br>
 <https://python-poetry.org/docs/#installation>
@@ -36,7 +36,7 @@ APIs, Twitch, Youtube, MoviePy, OpenCV, MongoDB...
 
 ```sh
 git clone https://github.com/amaurylrd/twitch_compyle.git
-cd twitch_compyle
+cd twitch_compyle/
 ```
 
 2. **Checkout** the main branch
@@ -50,7 +50,7 @@ poetry lock
 poetry install --sync
 ```
 
-Secondly refer to the [configuration guide](.github/doc/CONFIGURATION.md) for a documentated overview on how to configure the ``.env`` file.
+Secondly refer to the [configuration guide](.github/docs/CONFIGURATION.md) for a documentated overview on how to configure the ``.env`` file.
 
 ### Run
 
@@ -64,7 +64,7 @@ python sources/main.py -h
 
 ### 🚧 Contribution
 
-If you are interested in the project, check the [development manual](.github/doc/CONTRIBUTING.md).
+If you are interested in the project, check the [development manual](.github/docs/CONTRIBUTING.md).
 Please review this guide for further information on how to get started on the project for developers and contributors.
 
 ### 📫 Contact

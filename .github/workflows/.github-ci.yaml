@@ -1,0 +1,58 @@
+name: Python CI
+
+on:
+  push:
+    branches:
+      - '**'
+    # paths:
+    #   - '.github/workflows/common/**'
+
+  pull_request:
+    branches:
+      - '**'
+   
+jobs:
+  dependencies:
+    name: Install Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code v3
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.10"
+
+      - name: Upgrade pip
+        run: |
+          pip install --upgrade pip
+          pip --version
+
+      - name: Install Poetry 1.3.2
+        run: |
+          pip install poetry==1.3.2
+          poetry --version
+
+      - name: Install project dependencies
+        run: |
+          poetry config virtualenvs.create false
+          poetry install --no-root --no-interaction --no-ansi --without dev
+
+  quality:
+    name: Quality
+    runs-on: ubuntu-latest
+    needs: [dependencies]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/pylama
+      # - uses: ./.github/workflows/common/.pylama.yaml
+      # - uses: ./.github/workflows/common/.bandit.yaml
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [quality]
+    steps:
+      - run: echo "Release"
+      # - uses: ./.github/workflows/common/.release.yml

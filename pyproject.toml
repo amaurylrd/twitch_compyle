@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "twitch-compyle"
+name = "compyle"
 version = "0.1.0-alpha.1"
 description = "Twitch Compyle is an app that allows you to create Youtube compilations of the latest Twitch clips on your favorite games."
 authors = [
@@ -9,6 +9,8 @@ authors = [
 ]
 
 repository = "https://github.com/amaurylrd/twitch_compyle"
+documentation = "https://google.com"
+packages = [{include = "compyle"}]
 readme = "README.md"
 license = "Apache-2.0"
 classifiers = [
@@ -25,8 +27,9 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "~3.10"
-
+python-semantic-release = "^7.15.0"
 python-dotenv = "^0.21.0"
+
 pymongo = {extras = ["srv"], version = "^3.12"}
 jsonschema = "^4.0.1"
 retrying = "^1.3.4"
@@ -92,3 +95,23 @@ max_line_length = 120
 [tool.pylama.linter.pylint]
 disable = "R,E1101,E1130,E1136,E0401,C0103,C0114,C0115,C0116,W0511,W0603,W0612,W0613,W0703,W1514,W1401,W0622"
 max_line_length = 120
+
+[tool.semantic_release]
+version_variable = "compyle\\__init__.py:__version__"
+version_toml = [
+    "pyproject.toml:tool.poetry.version",    
+]
+version_pattern = [
+    "README.md:rev: v{version}",
+]
+build_command = "pip install poetry && poetry build -f wheel"
+branch = "main"
+prerelease_tag = "alpha"
+major_on_zero = "false"
+upload_to_pypi = "false"
+upload_to_repository = "false"
+upload_to_release = "true"
+commit_version_number = "true"
+commit_subject = "chore(release): v{version}"
+version_source = "tag"
+
