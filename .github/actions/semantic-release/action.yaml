@@ -1,0 +1,17 @@
+name: Run python semantic release
+description: ""
+
+inputs:
+  github-token:
+    description: "GitHub API token to publish GitHub releases"
+    default: ${{ github.token }}
+
+runs:
+  using: composite
+  steps:
+  - run: |
+      poetry run semantic-release changelog --post
+      poetry run semantic-release version
+    shell: bash
+    env:
+      GH_TOKEN: ${{ inputs.github_token }}

@@ -81,10 +81,14 @@ line-length = 120
 profile = "black"
 known_first_party = "compyle"
 
+[tool.bandit]
+targets = ["compyle"]
+exclude_dirs = [".venv"]
+
 [tool.pylama]
 format = "pycodestyle"
 linters = "pycodestyle,pyflakes,mccabe,eradicate,pylint"
-skip = "resources/*,.venv/*,tests/*"
+skip = ".venv/*"
 max_line_length = 120
 
 [tool.pylama.linter.pycodestyle]

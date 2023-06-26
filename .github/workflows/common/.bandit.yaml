@@ -1,8 +1,0 @@
-env:
-  PROJECT_DIR: ${{ github.workspace }}/compyle
-
-name: Run Bandit
-runs:
-  using: composite
-  steps:
-    - run: poetry run bandit -r ${{ env.PROJECT_DIR }}
