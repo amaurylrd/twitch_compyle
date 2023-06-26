@@ -1,0 +1,51 @@
+#     - name: Checkout code
+  #       uses: actions/checkout@v3.0.2
+
+  #     - name: Cache poetry virtualenv
+  #       uses: actions/cache@v2
+  #       id: cache
+  #       with:
+  #         path: .venv
+  #         key: ${{ runner.os }}-${{ hashFiles('poetry.lock') }}
+
+  #     - name: Set up Poetry ${{ env.POETRY_VERSION }}
+  #       run: |
+  #         pipx install poetry${{ env.POETRY_VERSION }}
+
+  #     - name: Set up Python ${{ env.PYTHON_VERSION }}
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: ${{ env.PYTHON_VERSION }}
+  #         cache: 'poetry'
+
+  #         # if: steps.cache.outputs.cache-hit != 'true'
+  #     - name: Install project dependencies
+  #       run: |
+  #         poetry config virtualenvs.in-project true
+  #         poetry config virtualenvs.create true
+  #         poetry install --no-root --no-interaction --no-ansi --without dev
+
+  # quality:
+  #   name: Quality
+  #   runs-on: ubuntu-latest
+  #   needs: [dependencies]
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     # - run: poetry --version
+  #     - name: Set up Python 3.1°
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '3.10'
+  #         cache: 'poetry'
+  #     - run: python -m poetry --version
+  #     # - uses: ./.github/actions/pylama
+  #     # - uses: ./.github/workflows/common/.pylama.yaml
+  #     # - uses: ./.github/workflows/common/.bandit.yaml
+
+  # release:
+  #   name: Release
+  #   runs-on: ubuntu-latest
+  #   needs: [quality]
+  #   steps:
+  #     - run: echo "Release"
+  #     # - uses: ./.github/workflows/common/.release.yml

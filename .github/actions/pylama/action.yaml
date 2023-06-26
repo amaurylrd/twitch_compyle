@@ -1,13 +1,23 @@
 # name: Run Pylama
+# description: ""
 # runs:
 #   using: composite
 #   steps:
-#     - run: poetry run pylama
+#   - run: poetry run pylama
+#     shell: bash
+
+# let's write the same thing but it now takes the cache from the previous step
+# and uses it to run pylama
 
 name: Run Pylama
-description: "BLABLA TEST"
+description: ""
 runs:
-  using: "composite"
+  using: composite
   steps:
+  - uses: actions/cache@v3.0.2
+    with:
+      path: .venv
+      key: ${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
   - run: poetry run pylama
     shell: bash
+

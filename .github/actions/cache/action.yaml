@@ -1,0 +1,42 @@
+name: Install Python and Poetry
+description: ""
+
+inputs:
+  python-version:
+    description: "Python version to use for restoring and saving the cache"
+    default: '3.10'
+  poetry-version:
+    description: "Poetry version to use for restoring and saving the cache"
+    default: '>=1.3.2'
+    
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v3.0.2
+    
+    - name: Cache poetry virtualenv
+      id: cache
+      uses: actions/cache@v3.0.2
+      with:
+        path: .venv
+        key: ${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+    - if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
+      name: Install poetry
+      shell: bash
+      run: pipx install poetry${{ inputs.poetry-version }}
+    
+    - if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
+      name: Set up python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: 'poetry'
+    
+    - if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}  
+      name: Install project dependencies
+      shell: bash
+      run: |
+        poetry config virtualenvs.in-project true
+        poetry config virtualenvs.create true
+        poetry install --no-root --no-interaction --no-ansi --without dev
