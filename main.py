@@ -1,175 +1,117 @@
-# pylint: disable=unused-import, import-outside-toplevel, invalid-name
+#!/usr/bin/env python3
 
-import datetime
-import os
-from typing import Optional
-from urllib.request import urlcleanup, urlretrieve
+# ********************************************************************************
+# *     This software is licensed as described in the file LICENSE, which        *
+# *     you should have received as part of this distribution. The terms         *
+# *     are also available at gnu.org/licenses/license-list.html.                *
+# ********************************************************************************
 
-import cv2
-import PIL.Image as pil
-from moviepy.audio.fx.audio_normalize import audio_normalize
-from moviepy.editor import (
-    CompositeVideoClip,
-    TextClip,
-    VideoFileClip,
-    concatenate_videoclips,
-)
-from moviepy.video.compositing.transitions import crossfadein, slide_in
-from moviepy.video.fx.fadein import fadein
-from moviepy.video.fx.resize import resize
+import argparse
+import inspect
+import logging
+import pathlib
 
-from compyle.actions import collect
-from compyle.preloader import launch_after_preload
-from compyle.services.twitch import TwitchApi
-from compyle.utils.decorators import call_before_after
-from compyle.utils.descriptors import serialize
+from os import getenv
+from typing import Any, Dict
+
+import toml
+
+from compyle import actions
+
+# from compyle.actions import *
 
 
-@call_before_after(urlcleanup)
+DEFAULT_REPORT_FOLDER = "reports/"
+DEFAULT_VIDEO_FOLDER = "videos/"
+
+
 def main():
-    # workflow= collect -> edit -> upload en json
-    # https://docs.python.org/3/library/argparse.html
-    report = collect()
-    exit(0)
+    # defines the logging levels from the least verbose to the most
+    levels = (logging.WARNING, logging.INFO, logging.DEBUG)
 
-    # import random
-    # random.shuffle(clips)
+    # extracts the project infos from the pyproject.toml file
+    with open("pyproject.toml", encoding="utf-8") as file:
+        section: Dict[str, Any] = toml.load(file)["tool"]["poetry"]
+        name, description, version = (keyword for keyword in section if keyword in ["name", "description", "version"])
 
-    subclips = []
-    subclips_duration = 0
+    # creates the parser for the program arguments
+    parser = argparse.ArgumentParser(description=description, epilog=f"{name} {version}")
+    parser.add_argument("-V", "--version", action="version", version=version)
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        help="increase the verbosity (default: WARNING, -v: INFO, -vv: DEBUG)",
+        default=len(levels) - 1 if getenv("DEBUG") in ["True", "true"] else 0,
+    )
 
-    subimages = {}
+    # creates the subparser for the sub commands
+    subparser: argparse._SubParsersAction = parser.add_subparsers(help="select the action to perform", required=True)
 
-    timestamps = ""
-    credits = set()
+    # the parser for the command 'collect'
+    parser_collect: argparse.ArgumentParser = subparser.add_parser(
+        "collect",
+        aliases=["c"],
+        description=inspect.cleandoc(
+            """
+            collect:
+                1) retrieve clips data from the public Twitch API
+                2) parse, select and normalize the data
+                3) save the parsed result in MongoDB database or file
+            """
+        ),
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    parser_collect.set_defaults(func=actions.collect)
+    parser_collect.add_argument(
+        "-out",
+        "--output",
+        type=pathlib.Path,  # TODO pathlib.Path doesn't keep the trailing slash
+        metavar="FILE | DIRECTORY",
+        help="specify the output path where to store the report (all path elements will be created at need)",
+        default=argparse.SUPPRESS if getenv("MONGO_DB_URI") else DEFAULT_REPORT_FOLDER,
+    )
 
-    # todo thumbnail des 4 meilleures
-    # TODO couleur
-    # todo shuffle, pas deux même streamers de suite
-    # todo break si durée au dessus de 10 minutes + historique
+    # the parser for the command 'edit'
+    parser_edit: argparse.ArgumentParser = subparser.add_parser("edit", aliases=["e"])  # TODO add description
+    parser_edit.set_defaults(func=actions.edit)
+    parser_edit.add_argument(
+        "-in",
+        "--input",
+        type=argparse.FileType("r", encoding="utf-8"),
+        metavar="FILE | DIRECTORY",
+        help="specify the input path where to import the data from",
+        default=argparse.SUPPRESS if getenv("MONGO_DB_URI") else DEFAULT_REPORT_FOLDER,
+    )
+    parser_edit.add_argument(
+        "-out",
+        "--output",
+        type=pathlib.Path,  # TODO pathlib.Path doesn't keep the trailing slash
+        metavar="FILE | DIRECTORY",
+        help="specify the output path where to store the metafile about the video",
+        default=argparse.SUPPRESS if getenv("MONGO_DB_URI") else DEFAULT_VIDEO_FOLDER,
+    )
 
-    for clip in clips[2:4]:
-        # 1. retrieve clip url and download clip file
-        url = api.get_clip_url(clip)
-        temporary_file = urlretrieve(url)[0]
+    # the parser for the command 'publish'
+    parser_publish: argparse.ArgumentParser = subparser.add_parser("publish", aliases=["p"])  # TODO add description
+    parser_publish.set_defaults(func=None)  # TODO set the function
+    parser_publish.add_argument(
+        "-in",
+        "--input",
+        type=argparse.FileType("r", encoding="utf-8"),
+        metavar="FILE | DIRECTORY",
+        help="specify the input path where to retrieve the video data from",
+        default=argparse.SUPPRESS if getenv("MONGO_DB_URI") else DEFAULT_VIDEO_FOLDER,
+    )
 
-        # 2. videoclip creation and normalization
-        videoclip: VideoFileClip = VideoFileClip(temporary_file)
-        videoclip = videoclip.subclip(0, clip["duration"])
-        videoclip = videoclip.set_fps(60)
-        videoclip = videoclip.fx(resize, width=1920, height=1080)
-        videoclip = audio_normalize(videoclip)
+    # parses the arguments present in the command line
+    kwargs: Dict[str, Any] = {key: value for key, value in parser.parse_args()._get_kwargs()}
 
-        # 3. textclip creation
-        textclip: TextClip = TextClip(
-            clip["broadcaster_name"].ljust(5),
-            # TODO pourquoi ça strip
-            method="caption",
-            align="center",
-            fontsize=60,
-            color="white",
-            bg_color="rgb(145, 70, 255)",  # TODO mettre custom twitch bg-color
-            # stroke_color="black",
-            # stroke_width=1,
-        )
-        textclip = textclip.set_position(("left", "top"))
-        textclip = textclip.set_duration(videoclip.duration)
-        # todo set duration 3 ou 4 secondes avec un fadeout
-        textclip = textclip.fx(slide_in, duration=1, side="left")
+    # sets the logging level
+    logging.basicConfig(level=levels[min(kwargs.pop("verbose"), len(levels) - 1)])
 
-        def get_faces(image: cv2.Mat):
-            image: cv2.Mat = cv2.resize(image, (0, 0), fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
-            # todo (0,0) ou None
-            grayscale: cv2.Mat = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            grayscale: cv2.Mat = cv2.equalizeHist(grayscale)
-
-            cascade: str = "./opencv/haarcascades/frontalface.xml"
-            classifier: cv2.CascadeClassifier = cv2.CascadeClassifier(cascade)
-
-            return classifier.detectMultiScale(
-                grayscale,
-                scaleFactor=1.3,
-                minNeighbors=6,
-                minSize=(30, 30),
-                flags=cv2.CASCADE_SCALE_IMAGE,
-            )
-
-        # 4. face detection for thumbnail
-        if len(subimages) < 4 and clip["broadcaster_name"] not in subimages:
-            image = cv2.imread(urlretrieve(clip["thumbnail_url"])[0])
-            faces = get_faces(image)
-
-            i = 0
-            while len(faces) < 1 and i < videoclip.duration:
-                image = videoclip.get_frame(i)
-                faces = get_faces(image)
-                i += 1
-
-            if len(faces) > 0:
-                x, y, w, h = tuple(int(coord * 2) for coord in faces[0])
-                center = x + w // 2, y + h // 2
-
-                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-                matrix = cv2.getRotationMatrix2D(center, 0, 2.0)
-                image = cv2.warpAffine(image, matrix, image.shape[1::-1], flags=cv2.INTER_LINEAR)
-
-                subimages[clip["broadcaster_name"]] = image
-                cv2.imwrite(f"./opencv/image-{len(subimages)}.png", image)
-
-        # 5. append composite clip to subclips
-        composite: CompositeVideoClip = CompositeVideoClip([videoclip, textclip]).set_duration(videoclip.duration)
-        composite = composite.fx(crossfadein, 1) if subclips else composite
-        subclips.append(composite)
-        videoclip.close()
-        textclip.close()
-        # todo test close composite, trouver 1 liner pour les 3
-
-        # 6. updating timestamps and description
-        minutes = int(subclips_duration / 60)
-        seconds = int(subclips_duration % 60)
-        timestamp = f"{minutes:02d}:{seconds:02d}"
-        timestamps += f"{timestamp} {clip['broadcaster_name']}\n"
-        subclips_duration += composite.duration
-
-        credit = f"{clip['broadcaster_name']} - https://www.twitch.tv/{clip['broadcaster_name']}"
-        credits.add(credit)
-
-    if subclips:
-        thumbnail = pil.new("RGB", (1920, 1080))
-        width, height = tuple(size // 2 for size in thumbnail.size)
-
-        for i, (_, subimage) in enumerate(subimages.items()):
-            border = [30] * 4
-
-            subimage = cv2.resize(subimage, (width, height))
-            subimage = cv2.copyMakeBorder(subimage, *border, cv2.BORDER_CONSTANT, value=(145, 70, 255))
-            subimage = pil.fromarray(subimage)
-
-            thumbnail.paste(subimage, (i % 2 * width, i // 2 * height))
-
-        thumbnail.save("thumbnail.png")
-        # todo fall back thumbnail remote_thumbnail = urlretrieve(clips[0]["thumbnail_url"])[0]
-        # exit(0)
-
-        # to be remove to when remote download is fixed
-        local_file = "clips.mp4"
-        if os.path.exists(local_file):
-            os.remove(local_file)
-
-        video: CompositeVideoClip = concatenate_videoclips(subclips, method="compose", padding=-1)
-        # si debug ultrafast, si prod slow preset="ultrafast",
-        video.write_videofile(local_file, codec="h264_nvenc", audio_codec="aac", verbose=False)
-        video.close()
-        # adjust thread and codec for gpu acceleration
-
-        print(video.duration)
-        print(subclips_duration)
-
-        description = "🎥 Credits:\n" + "\n".join(credits) + "\n\n⌚ Timestamps:\n" + timestamps
-        print(description)
-
-    # todo shuffle + pas deux fois le meme streamer à la suite ?
+    return kwargs.pop("func")(**kwargs)
 
 
 if __name__ == "__main__":
-    launch_after_preload(main)
+    main()

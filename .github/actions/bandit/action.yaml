@@ -1,0 +1,8 @@
+name: Run Bandit
+description: Run security checks with bandit
+
+runs:
+  using: composite
+  steps:
+  - run: poetry run bandit -r ${{ github.workspace }}/compyle -c pyproject.toml
+    shell: bash

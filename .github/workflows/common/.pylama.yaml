@@ -1,9 +1,0 @@
-name: Run Pylama
-runs:
-  using: composite
-  steps:
-    - run: python --version
-    - run: pip --version
-    - run: poetry --version
-    - run: poetry run pylama
-

@@ -2,6 +2,8 @@
 
 v0.0.1 [![Build Status](https://app.travis-ci.com/amaurylrd/twitch_compyle.svg?token=8zCbm6e8xiaKAE2XXKzm&branch=main)](https://app.travis-ci.com/amaurylrd/twitch_compyle) [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![Read the Docs](https://img.shields.io/readthedocs/compyle?label=Read%20the%20Docs&logo=Read%20the%20Docs)](https://google.com)
 
+[![Build Status](https://img.shields.io/github/actions/workflow/status/twitch_compyle/.github/workflows/.github-ci.yaml?branch=main&label=Test%20Status&logo=github)](.github/workflows/.github-ci.yaml)
+
 # $${Com \color{red} py \color{black} le}$$
 
 ## Keywords
