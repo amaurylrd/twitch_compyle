@@ -1,0 +1,26 @@
+name: Run Renovate
+description: Run Renovate package to update proetry dependencies
+
+# TODO dire config file config.js
+
+inputs:
+  renovate-version:
+    description: ""
+    default: "35.0.0"
+  renovate-token:
+    description: ""
+    default: ${{ github.token }}
+    # ${{ env.GITHUB_COM_TOKEN }}
+  renovate-image:
+    description: ""
+    default: myproxyhub.domain.com/renovate/renovate
+
+runs:
+  using: composite
+  steps:
+  - name: Self-hosted Renovate
+    uses: renovatebot/github-action@v38.1.6
+    with:
+      renovate-version: ${{ inputs.renovate-version }}
+      token: ${{ inputs.renovate-token }}
+      renovate-image: ${{ inputs.renovate-image }}

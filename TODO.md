@@ -1,7 +1,11 @@
 
+> Installer ci renovate
+
 > FIX pylama in ci max_lengt_line
 
-> FINIR markdown
+> FINIR markdowns documentation
+
+> MAYBE ajouter un linter de markdown
 
 TODO in his own file
 ### User Interface Usage
