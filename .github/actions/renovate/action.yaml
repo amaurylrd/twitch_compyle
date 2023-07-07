@@ -5,21 +5,28 @@ description: Run Renovate package to update proetry dependencies
 
 inputs:
   renovate-version:
-    description: ""
+    description: The Renovate Action version to use
     default: "38.1.11"
   renovate-token:
-    description: ""
+    description: The Renovate token to use
     default: ${{ github.token }}
   renovate-image:
-    description: ""
-    default: myproxyhub.domain.com/renovate/renovate
+    description: The Renovate Docker image name to use
+    default: ghcr.io/renovatebot/renovate
 
 runs:
   using: composite
   steps:
-  - name: Self-hosted Renovate ${{ inputs.renovate-version }}
+  - run: git config --global core.autocrlf false
+    shell: bash
+  - name: Use renovate ${{ inputs.renovate-version }}
     uses: renovatebot/github-action@v${{ inputs.renovate-version }}
     with:
       token: ${{ inputs.renovate-token }}
       renovate-image: ${{ inputs.renovate-image }}
-      base-dir: ${{ github.workspace }}
+      dry-run: --dry-run lookup
+      configurationFile: .github/actions/renovate/renovate-config.json.js
+
+      # 
+      # https://docs.renovatebot.com/self-hosted-configuration/#dryrun
+      # username: 'renovate-release',

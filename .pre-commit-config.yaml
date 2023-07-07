@@ -3,7 +3,7 @@ default_language_version:
   node: "18.12.0"
   python: "python3.10"
 
-exclude: '.vscode/'
+exclude: ".vscode/"
 
 repos:
   - repo: https://github.com/MarcoGorelli/absolufy-imports
