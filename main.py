@@ -16,10 +16,8 @@ from typing import Any, Dict
 
 import toml
 
-from compyle import actions
-
-# from compyle.actions import *
-
+from compyle.actions.collect import collect
+from compyle.actions.edit import edit
 
 DEFAULT_REPORT_FOLDER = "reports/"
 DEFAULT_VIDEO_FOLDER = "videos/"
@@ -29,14 +27,16 @@ def main():
     # defines the logging levels from the least verbose to the most
     levels = (logging.WARNING, logging.INFO, logging.DEBUG)
 
-    # extracts the project infos from the pyproject.toml file
+    # extracts the project information from the pyproject.toml file
     with open("pyproject.toml", encoding="utf-8") as file:
         section: Dict[str, Any] = toml.load(file)["tool"]["poetry"]
-        name, description, version = (keyword for keyword in section if keyword in ["name", "description", "version"])
+        # all requested keys are required in a valid pyproject.toml file
+        name, description, version = (section[key] for key in ["name", "description", "version"])
 
     # creates the parser for the program arguments
     parser = argparse.ArgumentParser(description=description, epilog=f"{name} {version}")
-    parser.add_argument("-V", "--version", action="version", version=version)
+    version_argument: argparse.Action = parser.add_argument("-V", "--version", action="version", version=version)
+    version_argument.help = f"{version_argument.help} ({version})"
     parser.add_argument(
         "-v",
         "--verbose",
@@ -62,7 +62,7 @@ def main():
         ),
         formatter_class=argparse.RawTextHelpFormatter,
     )
-    parser_collect.set_defaults(func=actions.collect)
+    parser_collect.set_defaults(func=collect)
     parser_collect.add_argument(
         "-out",
         "--output",
@@ -71,10 +71,11 @@ def main():
         help="specify the output path where to store the report (all path elements will be created at need)",
         default=argparse.SUPPRESS if getenv("MONGO_DB_URI") else DEFAULT_REPORT_FOLDER,
     )
+    # if not specified the report will be stored in the configured database
 
     # the parser for the command 'edit'
     parser_edit: argparse.ArgumentParser = subparser.add_parser("edit", aliases=["e"])  # TODO add description
-    parser_edit.set_defaults(func=actions.edit)
+    parser_edit.set_defaults(func=edit)
     parser_edit.add_argument(
         "-in",
         "--input",
@@ -105,7 +106,8 @@ def main():
     )
 
     # parses the arguments present in the command line
-    kwargs: Dict[str, Any] = {key: value for key, value in parser.parse_args()._get_kwargs()}
+    # pylint: disable=protected-access
+    kwargs: Dict[str, Any] = dict(parser.parse_args()._get_kwargs())
 
     # sets the logging level
     logging.basicConfig(level=levels[min(kwargs.pop("verbose"), len(levels) - 1)])

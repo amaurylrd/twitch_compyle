@@ -36,7 +36,7 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
         # loads data from the database
         with MongoDB() as mongo_db:
             clips = mongo_db.get_documents("clips")  # todo filter ceux non utilisé pour des clips
-
+            print(clips)
         pass
     else:
         # stores the clips data in the filesystem
@@ -46,7 +46,7 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
         # soit c'est un fichier soit un dossier
         pass
 
-    print("edit", input, output)
+    print("edit", _input, output)
     # TODO laoder
 
     # for clip in clips[2:4]:

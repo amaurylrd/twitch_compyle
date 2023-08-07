@@ -117,7 +117,7 @@ class MongoDB(metaclass=Singleton):
         Returns:
             dict: the normalized document.
         """
-        document["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        document["updated_at"] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")
         if "created_at" not in document:
             document["created_at"] = document["updated_at"]
 
@@ -194,11 +194,11 @@ class MongoDB(metaclass=Singleton):
         return self.database[collection].find_one({"_id": query["_id"]})
 
     # pylint: disable=line-too-long
-    @log_before_after
+    # @log_before_after
     def get_documents(
         self,
         collection: str,
-        query: dict,
+        query: dict = None,
         projection=None,
         limit=0,
         offset=0,
@@ -209,7 +209,7 @@ class MongoDB(metaclass=Singleton):
 
         Args:
             collection (str): the name of the collection.
-            query (dict): the query to filter the documents.
+            query (dict): the query to filter the documents. If not present, fetch all the data. Defaults to None.
             projection (Dict[str, str], optional): fields be to to excluded from the result. Defaults to None.
             limit (int, optional): the maximum number of results to return. Defaults to 0 (no limit).
             offset (int, optional): the number of documents to omit (from the start of the result set).
@@ -228,6 +228,8 @@ class MongoDB(metaclass=Singleton):
         #     query,
         #     projection,
         # )
+
+        # if no query, get all documents
 
         cursor = self.database[collection].find(
             filter=query, projection=projection, skip=offset, limit=limit, sort=sorts_list, batch_size=batch_size
