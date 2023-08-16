@@ -28,7 +28,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "~3.10"
 python-semantic-release = "^7.15.0"
-python-dotenv = "^0.21.0"
+python-dotenv = "^1.0.0"
 
 pymongo = {extras = ["srv"], version = "^4.0.0"}
 jsonschema = "^4.0.1"
