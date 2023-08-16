@@ -15,7 +15,7 @@ jobs:
     name: Renovate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@96f53100ba2a5449eb71d2e6604bbcd94b9449b5
+      - uses: actions/checkout@7739b9ba2efcda9dde65ad1e3c2dbe65b41dfba7
       - uses: ./.github/actions/renovate
       # if: github.event_name == 'pull_request'
 
@@ -24,7 +24,7 @@ jobs:
     needs: [renovate]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@96f53100ba2a5449eb71d2e6604bbcd94b9449b5
+      - uses: actions/checkout@7739b9ba2efcda9dde65ad1e3c2dbe65b41dfba7
       - uses: ./.github/actions/cache
   
   quality:
@@ -32,7 +32,7 @@ jobs:
     needs: [dependencies]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@96f53100ba2a5449eb71d2e6604bbcd94b9449b5
+      - uses: actions/checkout@7739b9ba2efcda9dde65ad1e3c2dbe65b41dfba7
       - uses: ./.github/actions/cache
       - uses: ./.github/actions/bandit
       - uses: ./.github/actions/pylama
@@ -42,7 +42,7 @@ jobs:
     needs: [dependencies]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@96f53100ba2a5449eb71d2e6604bbcd94b9449b5
+      - uses: actions/checkout@7739b9ba2efcda9dde65ad1e3c2dbe65b41dfba7
       - uses: ./.github/actions/cache
       - uses: ./.github/actions/coverage
 
@@ -53,7 +53,7 @@ jobs:
     needs: [dependencies] # TODO quality, test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push' && !contains(github.event.head_commit.message, 'chore(release):')
     steps:
-      - uses: actions/checkout@96f53100ba2a5449eb71d2e6604bbcd94b9449b5
+      - uses: actions/checkout@7739b9ba2efcda9dde65ad1e3c2dbe65b41dfba7
         with:
           fetch-depth: 0
       - uses: ./.github/actions/cache
