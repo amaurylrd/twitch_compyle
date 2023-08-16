@@ -1085,13 +1085,13 @@ files = [
 
 [[package]]
 name = "pdoc"
-version = "13.1.1"
+version = "14.0.0"
 description = "API Documentation for Python Projects"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "pdoc-13.1.1-py3-none-any.whl", hash = "sha256:9025c6cd2448b18662e88eacf84c6eb050dcbdc8ee5259aee5e40a1c2b417840"},
-    {file = "pdoc-13.1.1.tar.gz", hash = "sha256:2b8e341b1882ed8217e95c1f3f1f11d34f9ef93a5796287590162e2035296815"},
+    {file = "pdoc-14.0.0-py3-none-any.whl", hash = "sha256:4514041ff5da33f1adbc700002a661600fc13a9adadef317bc6ae8be9e61154b"},
+    {file = "pdoc-14.0.0.tar.gz", hash = "sha256:ad6c16c949e5dd8b30effc5398aedb5779ffe8ab94be91ce2cddc320e8127900"},
 ]
 
 [package.dependencies]
@@ -2126,4 +2126,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.10"
-content-hash = "f1f530ec18a50809caf4c4f740defb3ce9f1020ef19af62fb888f83a1f9f89b0"
+content-hash = "7faf134281d1396b82c3f72502d7f532346816caabdcb46d8c3ad48217176c1c"
