@@ -1,4 +1,5 @@
 from collections import namedtuple
+import logging
 from os import getenv
 
 from dotenv import load_dotenv

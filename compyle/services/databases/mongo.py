@@ -118,8 +118,8 @@ class MongoDB(metaclass=Singleton):
             dict: the normalized document.
         """
         document["updated_at"] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")
-        if "created_at" not in document:
-            document["created_at"] = document["updated_at"]
+        if "inserted_at" not in document:
+            document["inserted_at"] = document["updated_at"]
 
         return document
 

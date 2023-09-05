@@ -112,6 +112,10 @@ def main():
     # sets the logging level
     logging.basicConfig(level=levels[min(kwargs.pop("verbose"), len(levels) - 1)])
 
+    # sets the logging level for ImageMagick subplugins
+    logging.getLogger("PIL.PngImagePlugin").setLevel(logging.ERROR)
+    logging.getLogger("imageio_ffmpeg").setLevel(logging.ERROR)
+
     return kwargs.pop("func")(**kwargs)
 
 
