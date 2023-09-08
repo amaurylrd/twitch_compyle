@@ -3,7 +3,6 @@ import os
 import pathlib
 import sys
 from typing import Any, Dict, Sequence
-
 from unittest import TestCase, mock
 
 from compyle.actions import collect

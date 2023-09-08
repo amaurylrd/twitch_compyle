@@ -27,6 +27,5 @@ runs:
       dry-run: --dry-run lookup
       configurationFile: .github/actions/renovate/renovate-config.json.js
 
-      # 
       # https://docs.renovatebot.com/self-hosted-configuration/#dryrun
       # username: 'renovate-release',

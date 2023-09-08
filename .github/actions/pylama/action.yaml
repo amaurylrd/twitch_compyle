@@ -6,4 +6,3 @@ runs:
   steps:
   - run: poetry run pylama ${{ github.workspace }}/compyle -o pyproject.toml
     shell: bash
-

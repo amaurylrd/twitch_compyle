@@ -33,7 +33,7 @@ git push origin feat/AwesomeFeature
 &rarr; If you have any suggestions, bug reports please report them to the issue tracker at <https://github.com/amaurylrd/twitch_compyle/issues>
 
 
-### Contributing Policy 
+### Contributing Policy
 
 #### Code Formatting
 

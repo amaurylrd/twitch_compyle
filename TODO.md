@@ -22,7 +22,7 @@ TODO in his own file
 le fichier d'ouput des log, par default sortie standard
 filename avec la date
 logging.basicConfig(level=logging.DEBUG, filename="logfile", filemode="w+", format="%(asctime)-15s %(levelname)-8s %(message)s")
-add ce fichier dans le gitignore 
+add ce fichier dans le gitignore
 
 > FIX mongoDB
 

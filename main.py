@@ -10,7 +10,6 @@ import argparse
 import inspect
 import logging
 import pathlib
-
 from os import getenv
 from typing import Any, Dict
 

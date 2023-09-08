@@ -114,7 +114,7 @@ max_line_length = 120
 [tool.semantic_release]
 version_variable = "compyle/__init__.py:__version__"
 version_toml = [
-    "pyproject.toml:tool.poetry.version",    
+    "pyproject.toml:tool.poetry.version",
 ]
 version_pattern = [
     "README.md:rev: v{version}",
@@ -129,4 +129,3 @@ upload_to_release = "true"
 commit_version_number = "true"
 commit_subject = "chore(release): v{version}"
 version_source = "tag"
-

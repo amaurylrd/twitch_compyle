@@ -26,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@8b5e8b768746b50394015010d25e690bfab9dfbc
       - uses: ./.github/actions/cache
-  
+
   quality:
     name: Quality
     needs: [dependencies]
@@ -36,7 +36,7 @@ jobs:
       - uses: ./.github/actions/cache
       - uses: ./.github/actions/bandit
       - uses: ./.github/actions/pylama
-  
+
   test:
     name: Test
     needs: [dependencies]
@@ -58,13 +58,13 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/cache
       - uses: ./.github/actions/semantic-release
-         
-      
+
+
       # - name: Configure git
       #   run: |
       #     git config user.name github-actions
       #     git config user.email
-      
+
       # - name: Run python semantic release
       #   run: |
       #     poetry run semantic-release changelog --post
@@ -72,7 +72,7 @@ jobs:
 
       # - name: Publish semver
       #   run: poetry run semantic-release publish
-      
+
       #   env:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       #     # PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}

@@ -3,5 +3,8 @@
   "extends": [
     "github>renovatebot/.github"
   ],
-  "enabledManagers": ["poetry", "pre-commit"]
+  "enabledManagers": [
+    "poetry",
+    "pre-commit"
+  ]
 }

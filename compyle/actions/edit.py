@@ -127,7 +127,7 @@ def compose_clip(temp_file: str, broadcaster_name: str, **kwargs) -> CompositeVi
     # merge subclip and textclip into a composite clip
     composite: CompositeVideoClip = CompositeVideoClip([videoclip, textclip]).set_duration(videoclip.duration)
 
-    # releases the video, audio and text ressources
+    # releases the video, audio and text resources
     videoclip.close()
     textclip.close()
 
