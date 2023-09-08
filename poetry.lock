@@ -266,6 +266,7 @@ files = [
 name = "coverage"
 version = "7.3.1"
 description = "Code coverage measurement for Python"
+category = "dev"
 optional = false
 python-versions = ">=3.8"
 files = [
@@ -488,13 +489,13 @@ smmap = ">=3.0.1,<6"
 
 [[package]]
 name = "gitpython"
-version = "3.1.34"
+version = "3.1.35"
 description = "GitPython is a Python library used to interact with Git repositories"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "GitPython-3.1.34-py3-none-any.whl", hash = "sha256:5d3802b98a3bae1c2b8ae0e1ff2e4aa16bcdf02c145da34d092324f599f01395"},
-    {file = "GitPython-3.1.34.tar.gz", hash = "sha256:85f7d365d1f6bf677ae51039c1ef67ca59091c7ebd5a3509aa399d4eda02d6dd"},
+    {file = "GitPython-3.1.35-py3-none-any.whl", hash = "sha256:c19b4292d7a1d3c0f653858db273ff8a6614100d1eb1528b014ec97286193c09"},
+    {file = "GitPython-3.1.35.tar.gz", hash = "sha256:9cbefbd1789a5fe9bcf621bb34d3f441f3a90c8461d377f84eda73e721d9b06b"},
 ]
 
 [package.dependencies]
@@ -2040,3 +2041,4 @@ files = [
 lock-version = "2.0"
 python-versions = "~3.10"
 content-hash = "a1787cd2bc2431dc7eac0bcb45bc34839ffa72f2de6d6f0ca44db14fa644046e"
+content-hash = "aff3b4206192d2fe0c6cf505d17fb1082fdaccbc515daad743b35e1e443116f6"
