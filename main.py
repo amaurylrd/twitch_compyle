@@ -7,7 +7,6 @@
 # ********************************************************************************
 
 import argparse
-import inspect
 import logging
 import pathlib
 from os import getenv

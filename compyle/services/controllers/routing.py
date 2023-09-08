@@ -3,8 +3,10 @@ import time
 from abc import ABC
 from collections.abc import Iterable
 from datetime import datetime, timedelta
-from typing import Any, Dict, KeysView, List, Optional, Set, Tuple
+from typing import Any, Dict, KeysView, List, MutableMapping, Optional, Set, Tuple
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+from urllib.request import Request, urlopen
+
 
 import requests
 from rest_framework import status
@@ -447,3 +449,21 @@ class Routable(ABC):
             Router: the router for this instance.
         """
         return self.__router
+
+
+def url_retrieve(
+    url: str, data: Optional[Iterable[bytes]] = None, headers: MutableMapping[str, str] = None, size: int = -1
+) -> bytes:
+    """Retrieves the specified url and returns the content.
+
+    Args:
+        url (str): the url to be retrieved.
+        data (Iterable[bytes], optional): the data to be sent. Defaults to None.
+        headers (MutableMapping[str, str], optional): the headers to be sent. Defaults to None.
+        size (int, optional): the number of characters to read from the url. Defaults to -1.
+
+    Returns:
+        bytes: the content of the page.
+    """
+    with urlopen(Request(url, data=data, headers=headers)) as response:
+        return response.read(size)

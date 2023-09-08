@@ -3,7 +3,6 @@
 import logging
 import os
 from typing import Dict, List, Optional, Set, Tuple, TypeAlias
-from urllib.request import urlretrieve
 
 import cv2
 import numpy as np
@@ -17,6 +16,7 @@ from moviepy.editor import (
 from moviepy.video.compositing.transitions import crossfadein, crossfadeout, slide_in
 from moviepy.video.fx.resize import resize
 
+from compyle.services.controllers.routing import url_retrieve
 from compyle.services.databases.mongo import MongoDB
 
 vec4: TypeAlias = List[Tuple[int, int, int, int]]
@@ -157,7 +157,7 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
 
     for clip in clips:
         # retrieve clip url and download clip file
-        temporary_file: str = urlretrieve(clip["clip_url"])[0]
+        temporary_file: str = url_retrieve(clip["clip_url"])[0]
         broadcaster_name: str = clip["broadcaster_name"]
 
         print(broadcaster_name, clip["_id"])
@@ -181,7 +181,7 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
         _credits.add(credit)
 
         if len(subimages) < 4 and broadcaster_name not in subimages:
-            image = cv2.imread(urlretrieve(clip["thumbnail_url"])[0])
+            image = cv2.imread(url_retrieve(clip["thumbnail_url"])[0])
             faces = get_faces(image)
 
             i = 0
@@ -206,7 +206,7 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
         x = [fst, *rst]
 
         if not subimages:
-            thumbnail = cv2.imread(urlretrieve(clips[0]["thumbnail_url"])[0])
+            thumbnail = cv2.imread(url_retrieve(clips[0]["thumbnail_url"])[0])
         elif len(subimages) == 4:
             thumbnail = np.zeros((1080, 1920, 3), np.uint8)
             height, width = tuple(size // 2 for size in thumbnail.shape[:2])
@@ -289,7 +289,7 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
     # for clip in clips[2:4]:
     #     # 1. retrieve clip url and download clip file
     #     url = api.get_clip_url(clip)
-    #     temporary_file = urlretrieve(url)[0]
+    #     temporary_file = url_retrieve(url)[0]
 
     #     # 2. videoclip creation and normalization
     #     videoclip: VideoFileClip = VideoFileClip(temporary_file)
