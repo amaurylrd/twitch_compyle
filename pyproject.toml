@@ -58,12 +58,23 @@ toml = "^0.10.2"
 [tool.poetry.group.doc.dependencies]
 pdoc = "14.0.0"
 
+[tool.poetry.group.test.dependencies]
+coverage = "^5.5"
+
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.1"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
 requires = ["poetry-core>=1.2.0"]
+
+[tool.coverage.run]
+command_line = "-m unittest compyle.tests"
+include = ["*_test.py", "test_*.py"]
+disable_warnings = ["no-data-collected"]
+
+[tool.coverage.report]
+fail_under = 60
 
 [tool.black]
 exclude = '''

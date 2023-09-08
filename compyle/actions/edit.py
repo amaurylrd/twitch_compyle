@@ -2,11 +2,11 @@
 
 import logging
 import os
-import numpy as np
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple, TypeAlias
 from urllib.request import urlretrieve
-import cv2
 
+import cv2
+import numpy as np
 from moviepy.audio.fx.audio_normalize import audio_normalize
 from moviepy.editor import (
     CompositeVideoClip,
@@ -14,11 +14,12 @@ from moviepy.editor import (
     VideoFileClip,
     concatenate_videoclips,
 )
-from moviepy.video.compositing.transitions import crossfadein, slide_in, crossfadeout
-from moviepy.video.fx.fadeout import fadeout
+from moviepy.video.compositing.transitions import crossfadein, crossfadeout, slide_in
 from moviepy.video.fx.resize import resize
 
 from compyle.services.databases.mongo import MongoDB
+
+vec4: TypeAlias = List[Tuple[int, int, int, int]]
 
 
 def get_latest_file(path: os.PathLike) -> Optional[str]:
@@ -37,7 +38,14 @@ def get_latest_file(path: os.PathLike) -> Optional[str]:
     return None
 
 
-def get_faces(image: cv2.Mat):
+def get_faces(image: cv2.Mat) -> List[vec4]:
+    """Returns the faces detected in the specified image.
+
+    Args:
+        image (cv2.Mat): the image to process.
+    Returns:
+        List[Tuple[int, int, int, int]]: the faces detected in the specified image.
+    """
     image: cv2.Mat = cv2.resize(image, (0, 0), fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
 
     grayscale: cv2.Mat = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -55,7 +63,7 @@ def get_faces(image: cv2.Mat):
     )
 
 
-def find_crop(image: cv2.Mat, face, factor=1.5, ratio=16 / 9) -> Tuple[int, int, int, int]:
+def find_crop(image: cv2.Mat, face: vec4, factor=1.5, ratio=16 / 9) -> vec4:
     x, y, w, h = face  # pylint: disable=invalid-name
     center: Tuple[int, int] = x + w // 2, y + h // 2
 

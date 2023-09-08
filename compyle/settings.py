@@ -1,5 +1,5 @@
-from collections import namedtuple
 import logging
+from collections import namedtuple
 from os import getenv
 
 from dotenv import load_dotenv

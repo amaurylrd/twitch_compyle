@@ -16,7 +16,7 @@ from typing import Any, Dict
 
 import toml
 
-from compyle.actions.collect import collect
+from compyle.actions import collect
 from compyle.actions.edit import edit
 
 DEFAULT_REPORT_FOLDER = "reports/"
@@ -49,29 +49,7 @@ def main():
     subparser: argparse._SubParsersAction = parser.add_subparsers(help="select the action to perform", required=True)
 
     # the parser for the command 'collect'
-    parser_collect: argparse.ArgumentParser = subparser.add_parser(
-        "collect",
-        aliases=["c"],
-        description=inspect.cleandoc(
-            """
-            collect:
-                1) retrieve clips data from the public Twitch API
-                2) parse, select and normalize the data
-                3) save the parsed result in MongoDB database or file
-            """
-        ),
-        formatter_class=argparse.RawTextHelpFormatter,
-    )
-    parser_collect.set_defaults(func=collect)
-    parser_collect.add_argument(
-        "-out",
-        "--output",
-        type=pathlib.Path,  # TODO pathlib.Path doesn't keep the trailing slash
-        metavar="FILE | DIRECTORY",
-        help="specify the output path where to store the report (all path elements will be created at need)",
-        default=argparse.SUPPRESS if getenv("MONGO_DB_URI") else DEFAULT_REPORT_FOLDER,
-    )
-    # if not specified the report will be stored in the configured database
+    collect.get_parser(subparser)
 
     # the parser for the command 'edit'
     parser_edit: argparse.ArgumentParser = subparser.add_parser("edit", aliases=["e"])  # TODO add description
@@ -106,13 +84,13 @@ def main():
     )
 
     # parses the arguments present in the command line
-    # pylint: disable=protected-access
-    kwargs: Dict[str, Any] = dict(parser.parse_args()._get_kwargs())
+    kwargs: Dict[str, Any] = dict(parser.parse_args()._get_kwargs())  # pylint: disable=protected-access
 
     # sets the logging level
     logging.basicConfig(level=levels[min(kwargs.pop("verbose"), len(levels) - 1)])
 
     # sets the logging level for ImageMagick subplugins
+    # TODO logging ou debug
     logging.getLogger("PIL.PngImagePlugin").setLevel(logging.ERROR)
     logging.getLogger("imageio_ffmpeg").setLevel(logging.ERROR)
 
