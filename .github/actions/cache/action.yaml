@@ -31,4 +31,4 @@ runs:
         poetry env use ${{ inputs.python-version }}
         poetry config virtualenvs.in-project true
         poetry config virtualenvs.create true
-        poetry install --no-root --no-interaction --no-ansi --without dev
+        poetry install --no-root --no-interaction --no-ansi
