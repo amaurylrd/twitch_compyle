@@ -1,4 +1,4 @@
-name: Run Bandit
+name: Run bandit
 description: Run security checks with bandit
 
 runs:

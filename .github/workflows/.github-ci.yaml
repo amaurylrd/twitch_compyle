@@ -34,6 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@8b5e8b768746b50394015010d25e690bfab9dfbc
       - uses: ./.github/actions/cache
+      - uses: ./.github/actions/pre-commit
       - uses: ./.github/actions/bandit
       - uses: ./.github/actions/pylama
 

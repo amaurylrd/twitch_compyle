@@ -1,4 +1,4 @@
-name: Run Renovate
+name: Run renovate
 description: Run Renovate package to update proetry dependencies
 
 # TODO dire config file config.js

@@ -1,4 +1,4 @@
-name: Install Python and Poetry
+name: Install python and poetry
 description: Load python and poetry dependencies from cache
 
 inputs:

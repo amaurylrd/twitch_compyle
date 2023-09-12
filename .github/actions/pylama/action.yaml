@@ -1,4 +1,4 @@
-name: Run Pylama
+name: Run pylama
 description: Lint python code with pylama
 
 runs:
