@@ -20,7 +20,7 @@ module.exports = {
       ],
       matchDepTypes: ["devDependencies"],
       dependencyDashboardApproval: false,
-      stabilityDays: 0,
+      minimumReleaseAge: 0,
     },
   ],
 };
