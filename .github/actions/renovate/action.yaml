@@ -17,13 +17,48 @@ runs:
   steps:
   - run: git config --global core.autocrlf false
     shell: bash
-  - name: Use renovate
-    uses: renovatebot/github-action@v38.1.11
+
+  # fork this repo https://gitlab.com/renovate-bot/renovate-runner qui est sur Gitlab et moi sur GitHub
+
+
+
+  - name: Checkout renovate-runner
+    uses: actions/checkout@v2
     with:
-      token: ${{ inputs.renovate-token }}
-      renovate-image: ${{ inputs.renovate-image }}
-      renovate-version: ${{ inputs.renovate-version }}
-      configurationFile: .github/actions/renovate/renovate-config.json.js
+      repository: renovate-bot/renovate-runner
+      ref: v1.0.0
+      path: renovate-runner
+      # sur gitlab
+      # repository: https://gitlab.com/renovate-bot/renovate-runner.git
+      # ref: v1.0.0
+      # path: renovate-runner
+
+
+  - run: |
+      cd renovate-runner
+      npm install
+    shell: bash
+
+  - run: |
+      cd renovate-runner
+      node index.js --token ${{ inputs.renovate-token }} --config-file ../renovate-config.json.js
+    shell: bash
+
+  - run: |
+      git config --global user.name "Renovate Bot"
+      git config --global user.email "
+      git add .
+      git commit -m "chore(deps): update dependencies"
+      git push
+    shell: bash
+
+  # - name: Use renovate
+  #   uses: renovatebot/github-action@v38.1.11
+  #   with:
+  #     token: ${{ inputs.renovate-token }}
+  #     renovate-image: ${{ inputs.renovate-image }}
+  #     renovate-version: ${{ inputs.renovate-version }}
+  #     configurationFile: .github/actions/renovate/renovate-config.json.js
 
       # https://docs.renovatebot.com/self-hosted-configuration/#dryrun
       # username: 'renovate-release',
