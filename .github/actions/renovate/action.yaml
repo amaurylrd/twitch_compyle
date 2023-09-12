@@ -2,9 +2,6 @@ name: Run renovate
 description: Run Renovate package to update proetry dependencies
 
 inputs:
-  renovate-version:
-    description: The Renovate Action version to use
-    default: "38.1.11"
   renovate-token:
     description: The Renovate token to use
     default: ${{ github.token }}
@@ -17,8 +14,8 @@ runs:
   steps:
   - run: git config --global core.autocrlf false
     shell: bash
-  - name: Use renovate ${{ inputs.renovate-version }}
-    uses: renovatebot/github-action@v${{ inputs.renovate-version }}
+  - name: Use renovate
+    uses: renovatebot/github-action@v38.1.11
     with:
       token: ${{ inputs.renovate-token }}
       renovate-image: ${{ inputs.renovate-image }}
