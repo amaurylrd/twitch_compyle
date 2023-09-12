@@ -5,9 +5,9 @@ inputs:
   renovate-token:
     description: The Renovate token to use
     default: ${{ github.token }}
-  renovate-image:
-    description: The Renovate Docker image name to use
-    default: ghcr.io/renovatebot/renovate
+  # renovate-image:
+  #   description: The Renovate Docker image name to use
+  #   default: ghcr.io/renovatebot/renovate
 
 runs:
   using: composite
@@ -18,7 +18,7 @@ runs:
     uses: renovatebot/github-action@v38.1.11
     with:
       token: ${{ inputs.renovate-token }}
-      renovate-image: ${{ inputs.renovate-image }}
+      # renovate-image: ${{ inputs.renovate-image }}
       useSlim: true
       # dry-run: --dry-run lookup
       configurationFile: .github/actions/renovate/renovate-config.json.js
