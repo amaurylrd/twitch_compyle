@@ -1,8 +1,6 @@
 name: Run renovate
 description: Run Renovate package to update proetry dependencies
 
-# TODO dire config file config.js
-
 inputs:
   renovate-version:
     description: The Renovate Action version to use
@@ -29,3 +27,6 @@ runs:
 
       # https://docs.renovatebot.com/self-hosted-configuration/#dryrun
       # username: 'renovate-release',
+      # TODO dire config file config.js
+      # todo rajouter un poetry lock et ajouter se fichier dans le commit
+      # https://docs.renovatebot.com/self-hosted-configuration/#lockfilemaintenance
