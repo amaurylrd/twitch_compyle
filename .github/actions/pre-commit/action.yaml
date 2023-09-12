@@ -16,5 +16,11 @@ runs:
 
     - run: |
         poetry run pre-commit install --install-hooks
-        poetry run pre-commit --verbose=false run --show-diff-on-failure --color=always ${{ inputs.extra-args }}
+        poetry run pre-commit run --show-diff-on-failure --color=always ${{ inputs.extra-args }}
       shell: bash
+
+  # todo ajouter un workspace
+  # ou exclure env
+
+  # add verbose false a la config
+  # https://pre-commit.com/#pre-commit-run

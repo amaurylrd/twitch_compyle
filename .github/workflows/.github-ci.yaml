@@ -45,13 +45,13 @@ jobs:
     steps:
       - uses: actions/checkout@8b5e8b768746b50394015010d25e690bfab9dfbc
       - uses: ./.github/actions/cache
-      - uses: ./.github/actions/coverage
+      - uses: ./.github/actions/coverage # TODO cette fonction
 
   release:
     name: Release
     runs-on: ubuntu-latest
     concurrency: release
-    needs: [dependencies] # TODO quality, test
+    needs: [dependencies, quality, test]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push' && !contains(github.event.head_commit.message, 'chore(release):')
     steps:
       - uses: actions/checkout@8b5e8b768746b50394015010d25e690bfab9dfbc
