@@ -7,7 +7,6 @@ from typing import Any, Dict, KeysView, List, MutableMapping, Optional, Set, Tup
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 from urllib.request import Request, urlopen
 
-
 import requests
 from rest_framework import status
 
