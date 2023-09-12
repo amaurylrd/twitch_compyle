@@ -42,7 +42,7 @@ opencv-python = ">=4.7.0"
 [tool.poetry.group.lint.dependencies]
 bandit = "1.7.5"
 black = "23.9.1"
-pylama = {extras = ["all"], version = "^8.8.0"}
+pylama = {extras = ["all"], version = "^8.4.1"}
 pylint = "^2.10.2"
 pydocstyle = "6.3.0"
 types-docutils = "^0.19.0"
