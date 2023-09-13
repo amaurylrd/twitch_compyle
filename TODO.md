@@ -1,4 +1,11 @@
 
+Run pre-commit install to install pre-commit into your git hooks. pre-commit will now run on every commit. Every time you clone a project using pre-commit running pre-commit install should always be the first thing you do.
+
+If you want to manually run all pre-commit hooks on a repository, run pre-commit run --all-files. To run individual hooks use pre-commit run <hook_id>.
+
+The first time pre-commit runs on a file it will automatically download, install, and run the hook. Note that running a hook for the first time may be slow.
+
+
 > Installer ci renovate
 
 > FIX pylama in ci max_lengt_line
