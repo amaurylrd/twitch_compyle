@@ -20,6 +20,15 @@ runs:
 
   # fork this repo https://gitlab.com/renovate-bot/renovate-runner qui est sur Gitlab et moi sur GitHub
 
+  - name: Run self hosted renovate
+    uses: renovatebot/github-action@v38.1.11
+    env:
+      RENOVATE_REPOSITORIES: ${{ github.repository }}
+      RENOVATE_ONBOARDING: "false"
+      RENOVATE_PLATFORM_COMMIT: "true"
+    with:
+      token: ${{ inputs.renovate-token }}
+      configurationFile: .github/actions/renovate/renovate-config.json.js
   # - name: Use renovate
   #   uses: renovatebot/github-action@v38.1.11
   #   with:
