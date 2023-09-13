@@ -1,0 +1,11 @@
+name: Run python unittests and coverage
+description: Run python unittests and report coverage
+
+runs:
+  using: composite
+  steps:
+  - run: |
+      poetry run coverage erase
+      poetry run coverage run
+      poetry run coverage report
+    shell: bash
