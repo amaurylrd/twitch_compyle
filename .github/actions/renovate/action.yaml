@@ -5,20 +5,12 @@ inputs:
   renovate-token:
     description: The Renovate token to use
     default: ${{ github.token }}
-  renovate-image:
-    description: The Renovate Docker image name to use
-    default: ghcr.io/renovatebot/renovate
-  renovate-version:
-    description: The Renovate Docker image version to use
-    default: latest
 
 runs:
   using: composite
   steps:
   - run: git config --global core.autocrlf false
     shell: bash
-
-  # fork this repo https://gitlab.com/renovate-bot/renovate-runner qui est sur Gitlab et moi sur GitHub
 
   - name: Run self hosted renovate
     uses: renovatebot/github-action@v38.1.11
@@ -29,6 +21,14 @@ runs:
     with:
       token: ${{ inputs.renovate-token }}
       configurationFile: .github/actions/renovate/renovate-config.json.js
+
+  # ajouter les nouvelles deps dans le commit
+  # - run: |
+  #     git add poetry.lock
+  #     git commit -m "chore(deps): update dependencies"
+  #     git push
+  #   shell: bash
+
   # - name: Use renovate
   #   uses: renovatebot/github-action@v38.1.11
   #   with:

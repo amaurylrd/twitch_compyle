@@ -15,10 +15,10 @@ jobs:
     name: Renovate
     runs-on: ubuntu-latest
     concurrency: renovate
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'pull_request') && !contains(github.event.head_commit.message, 'chore(deps):')
     steps:
       - uses: actions/checkout@8b5e8b768746b50394015010d25e690bfab9dfbc
       - uses: ./.github/actions/renovate
-      # if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'pull_request')
 
   dependencies:
     name: Install Dependencies
@@ -46,7 +46,7 @@ jobs:
     steps:
       - uses: actions/checkout@8b5e8b768746b50394015010d25e690bfab9dfbc
       - uses: ./.github/actions/cache
-      - uses: ./.github/actions/coverage # TODO cette fonction
+      - uses: ./.github/actions/coverage # TODO réparer cette fonction
 
   release:
     name: Release
@@ -62,7 +62,7 @@ jobs:
       - uses: ./.github/actions/cache
       - uses: ./.github/actions/semantic-release
 
-
+      # TODO continuer ça
       # - name: Configure git
       #   run: |
       #     git config user.name github-actions
