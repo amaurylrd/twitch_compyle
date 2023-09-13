@@ -12,7 +12,7 @@ runs:
     - uses: actions/cache@v3
       with:
         path: ~/.cache/pre-commit
-        key: ${{ runner.os }}-pre-commit-${{ hashFiles('**/.pre-commit-config.yaml') }}
+        key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
 
     - run: |
         poetry run pre-commit install --install-hooks
