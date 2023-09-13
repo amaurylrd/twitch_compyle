@@ -384,7 +384,7 @@ class Router:
             elif response.status_code == status.HTTP_429_TOO_MANY_REQUESTS:
                 epoch_timestamp: str = response.headers["Ratelimit-Reset"]
                 reset: datetime = datetime.fromtimestamp(epoch_timestamp)
-                delta: timedelta = reset - datetime.now()
+                delta: timedelta = reset - datetime.now(tz=reset.tzinfo)
 
                 LOGGER.debug(
                     "The bucket runs out of points within the last minute, it will be reset to full under %f",
