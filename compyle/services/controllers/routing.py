@@ -450,6 +450,7 @@ class Routable(ABC):
         return self.__router
 
 
+# pylint: disable=line-too-long
 def url_retrieve(
     url: str, data: Optional[Iterable[bytes]] = None, headers: MutableMapping[str, str] = None, size: int = -1
 ) -> bytes:
@@ -459,10 +460,10 @@ def url_retrieve(
         url (str): the url to be retrieved.
         data (Iterable[bytes], optional): the data to be sent. Defaults to None.
         headers (MutableMapping[str, str], optional): the headers to be sent. Defaults to None.
-        size (int, optional): the number of characters to read from the url. Defaults to -1.
+        size (int, optional): the number of characters to read from the url. Defaults to -1. If negative or omitted, read until EOF.
 
     Returns:
         bytes: the content of the page.
     """
-    with urlopen(Request(url, data=data, headers=headers)) as response:
+    with urlopen(Request(url, data=data, headers=headers)) as response:  # nosec
         return response.read(size)
