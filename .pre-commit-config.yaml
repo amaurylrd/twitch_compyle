@@ -24,7 +24,7 @@ repos:
         args:
           - --option=pyproject.toml
           - --max-line-length=120
-        additional_dependencies: [toml, mypy, eradicate, pydocstyle==6.1.1]
+        additional_dependencies: [toml, mypy, eradicate, pydocstyle==6.3.0]
 
   - repo: https://github.com/pycqa/isort
     rev: "5.12.0"
