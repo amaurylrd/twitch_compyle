@@ -15,7 +15,7 @@ jobs:
     name: Renovate
     runs-on: ubuntu-latest
     concurrency: renovate
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'pull_request') && !contains(github.event.head_commit.message, 'chore(deps):')
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/alpha') && (github.event_name == 'push' || github.event_name == 'pull_request') && !contains(github.event.head_commit.message, 'chore(deps):')
     steps:
       - uses: actions/checkout@8b5e8b768746b50394015010d25e690bfab9dfbc
       - uses: ./.github/actions/renovate
@@ -39,8 +39,8 @@ jobs:
       - uses: ./.github/actions/bandit
       - uses: ./.github/actions/pylama
 
-  test:
-    name: Test
+  tests:
+    name: Coverage
     needs: [dependencies]
     runs-on: ubuntu-latest
     steps:
@@ -52,7 +52,7 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     concurrency: release
-    needs: [dependencies, quality, test]
+    needs: [dependencies, quality, tests]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push' && !contains(github.event.head_commit.message, 'chore(release):')
     steps:
       - uses: actions/checkout@8b5e8b768746b50394015010d25e690bfab9dfbc
