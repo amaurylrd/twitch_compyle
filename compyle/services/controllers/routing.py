@@ -3,9 +3,8 @@ import time
 from abc import ABC
 from collections.abc import Iterable
 from datetime import datetime, timedelta
-from typing import Any, Dict, KeysView, List, MutableMapping, Optional, Set, Tuple
+from typing import Any, Dict, KeysView, List, Optional, Set, Tuple
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
-from urllib.request import Request, urlopen
 
 import requests
 from rest_framework import status
@@ -19,7 +18,7 @@ logging.getLogger("urllib3.connectionpool").setLevel(logging.WARNING)
 class Endpoint:
     """This class represents an endpoint for an API."""
 
-    def __validate_urls(self, *args):
+    def __validate_urls(self, *args) -> Tuple[str, str]:
         """Validates that endpoint parameters such as base_url and slug are strings.
 
         Args:
@@ -30,7 +29,7 @@ class Endpoint:
             ValueError: if any parameter is an empty str.
 
         Returns:
-            tuple: the validated and normalized parameters.
+            Tuple[str, str]: the validated and normalized parameters.
         """
         args = [*args]
         for i, arg in enumerate(args):
@@ -38,13 +37,13 @@ class Endpoint:
                 raise TypeError(f"String expected, wrong type provided at position {i}, found {type(arg)}")
 
             args[i] = arg.strip()
-            # slug devrait etre opt, par default ""
+
             if not args[i]:
                 raise ValueError(f"Non-empty string expected, wrong value provided at position {i}")
 
         return args
 
-    def __validate_url_params(self, *args):
+    def __validate_url_params(self, *args) -> Tuple[Set[str], Set[str]]:
         """Validates that query parameters such as required and optional url parameters are sets of strings.
 
         Args:
@@ -56,7 +55,7 @@ class Endpoint:
             ValueError: if required and optional parameters are not disjoint.
 
         Returns:
-            tuple: the validated and normalized parameters.
+            Tuple[Set[str], Set[str]]: the validated and normalized parameters.
         """
         # joins the required and optional url parameters lists into a single list
         args = [*args]
@@ -87,7 +86,7 @@ class Endpoint:
             req (Iterable, optional): the list of required body parameters. Defaults to None.
             opt (Iterable, optional): the list of optional body parameters. Defaults to None.
         """
-        self.__base_url, self.__slug = self.__validate_urls(base_url, slug)
+        self.__base_url, self.__slug = self.__validate_urls(base_url, slug or "")
         self.__required_params, self.__optional_params = self.__validate_url_params(req, opt)
 
     @property
@@ -144,6 +143,7 @@ class Endpoint:
         Returns:
             str: the unparsed url.
         """
+        # normalizes the query by removing the null parameters
         noramlized = {k: query[k] for k in self.required_params | self.optional_params if k in query and query[k]}
 
         if len(noramlized) < len(self.required_params):
@@ -152,6 +152,7 @@ class Endpoint:
         if any(param not in noramlized for param in self.required_params):
             raise ValueError(f"Missing required non-null parameters in {self.required_params.difference(noramlized)}")
 
+        # builds the url with the normalized query
         components = list(urlparse(self.base_url, allow_fragments=False))
         components[2] += self.slug_url
         components[4] = urlencode(noramlized)
@@ -448,22 +449,3 @@ class Routable(ABC):
             Router: the router for this instance.
         """
         return self.__router
-
-
-# pylint: disable=line-too-long
-def url_retrieve(
-    url: str, data: Optional[Iterable[bytes]] = None, headers: MutableMapping[str, str] = None, size: int = -1
-) -> bytes:
-    """Retrieves the specified url and returns the content.
-
-    Args:
-        url (str): the url to be retrieved.
-        data (Iterable[bytes], optional): the data to be sent. Defaults to None.
-        headers (MutableMapping[str, str], optional): the headers to be sent. Defaults to None.
-        size (int, optional): the number of characters to read from the url. Defaults to -1. If negative or omitted, read until EOF.
-
-    Returns:
-        bytes: the content of the page.
-    """
-    with urlopen(Request(url, data=data, headers=headers)) as response:  # nosec
-        return response.read(size)

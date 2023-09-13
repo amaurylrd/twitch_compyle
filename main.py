@@ -50,6 +50,7 @@ def main():
     collect.get_parser(subparser)
 
     # the parser for the command 'edit'
+    # TODO faire le get_parser de edit
     parser_edit: argparse.ArgumentParser = subparser.add_parser("edit", aliases=["e"])  # TODO add description
     parser_edit.set_defaults(func=edit)
     parser_edit.add_argument(
@@ -86,11 +87,6 @@ def main():
 
     # sets the logging level
     logging.basicConfig(level=levels[min(kwargs.pop("verbose"), len(levels) - 1)])
-
-    # sets the logging level for ImageMagick subplugins
-    # TODO logging ou debug
-    logging.getLogger("PIL.PngImagePlugin").setLevel(logging.ERROR)
-    logging.getLogger("imageio_ffmpeg").setLevel(logging.ERROR)
 
     return kwargs.pop("func")(**kwargs)
 

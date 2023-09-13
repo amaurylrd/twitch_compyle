@@ -2,7 +2,9 @@
 
 import logging
 import os
-from typing import Dict, List, Optional, Set, Tuple, TypeAlias
+import random
+from typing import Dict, Iterable, List, MutableMapping, Optional, Set, Tuple, TypeAlias
+from urllib.request import Request, urlcleanup, urlopen
 
 import cv2
 import numpy as np
@@ -16,8 +18,12 @@ from moviepy.editor import (
 from moviepy.video.compositing.transitions import crossfadein, crossfadeout, slide_in
 from moviepy.video.fx.resize import resize
 
-from compyle.services.controllers.routing import url_retrieve
 from compyle.services.databases.mongo import MongoDB
+from compyle.utils.decorators import call_before_after
+
+LOGGER = logging.getLogger(__name__)
+logging.getLogger("PIL.PngImagePlugin").setLevel(logging.ERROR)
+logging.getLogger("imageio_ffmpeg").setLevel(logging.ERROR)
 
 vec4: TypeAlias = List[Tuple[int, int, int, int]]
 
@@ -36,6 +42,25 @@ def get_latest_file(path: os.PathLike) -> Optional[str]:
         # gets the file in the specified path with the latest creation time
         return max((os.path.join(path, basename) for basename in os.listdir(path)), key=os.path.getctime, default=None)
     return None
+
+
+# pylint: disable=line-too-long
+def url_retrieve(
+    url: str, data: Optional[Iterable[bytes]] = None, headers: MutableMapping[str, str] = None, size: int = -1
+) -> bytes:
+    """Retrieves the specified url and returns the content.
+
+    Args:
+        url (str): the url to be retrieved.
+        data (Iterable[bytes], optional): the data to be sent. Defaults to None.
+        headers (MutableMapping[str, str], optional): the headers to be sent. Defaults to None.
+        size (int, optional): the number of characters to read from the url. Defaults to -1. If negative or omitted, read until EOF.
+
+    Returns:
+        bytes: the content of the page.
+    """
+    with urlopen(Request(url, data=data, headers=headers)) as response:  # nosec
+        return response.read(size)
 
 
 def get_faces(image: cv2.Mat) -> List[vec4]:
@@ -63,7 +88,18 @@ def get_faces(image: cv2.Mat) -> List[vec4]:
     )
 
 
-def find_crop(image: cv2.Mat, face: vec4, factor=1.5, ratio=16 / 9) -> vec4:
+def find_crop(image: cv2.Mat, face: vec4, factor: float = 1.5, ratio: float = 16 / 9) -> vec4:
+    """Finds the crop coordinates for the specified image and face.
+
+    Args:
+        image (cv2.Mat): the image to process.
+        face (vec4): the face coordinates.
+        factor (float, optional): the scale factor to apply. Defaults to 1.5.
+        ratio (float, optional): the ratio to satisfy. Defaults to 16/9.
+
+    Returns:
+        vec4: the crop coordinates.
+    """
     x, y, w, h = face  # pylint: disable=invalid-name
     center: Tuple[int, int] = x + w // 2, y + h // 2
 
@@ -102,9 +138,19 @@ def find_crop(image: cv2.Mat, face: vec4, factor=1.5, ratio=16 / 9) -> vec4:
     return newx, newy, neww, newh
 
 
-def compose_clip(temp_file: str, broadcaster_name: str, **kwargs) -> CompositeVideoClip:
+def compose_clip(file: str, broadcaster_name: str, **kwargs) -> CompositeVideoClip:
+    """Composes a clip from the specified temporary file. Adds a textclip with the specified broadcaster name.
+
+    Args:
+        file (str): the path to the temporary file.
+        broadcaster_name (str): the name of the broadcaster.
+        kwargs (Dict[str, Any]): the optional arguments like the duration of the subclip, its new width and height.
+
+    Returns:
+        CompositeVideoClip: the composed clip.
+    """
     # videoclip creation and normalization
-    videoclip: VideoFileClip = VideoFileClip(temp_file)
+    videoclip: VideoFileClip = VideoFileClip(file)
     videoclip = videoclip.subclip(0, kwargs.get("duration", videoclip.duration))
     resize(videoclip, width=kwargs.get("width", 1920), height=kwargs.get("height", 1080))
     videoclip = videoclip.fx(audio_normalize)
@@ -120,9 +166,9 @@ def compose_clip(temp_file: str, broadcaster_name: str, **kwargs) -> CompositeVi
         # stroke_width=1,
     )
     textclip = textclip.set_duration(min(videoclip.duration, 5))
-    textclip = textclip.margin(top=50, bottom=videoclip.h - textclip.h - 50, right=videoclip.w - textclip.w, opacity=0)
     textclip = textclip.fx(slide_in, 1, "left")
     textclip = textclip.fx(crossfadeout, 1)
+    textclip = textclip.margin(top=50, bottom=videoclip.h - textclip.h - 50, right=videoclip.w - textclip.w, opacity=0)
 
     # merge subclip and textclip into a composite clip
     composite: CompositeVideoClip = CompositeVideoClip([videoclip, textclip]).set_duration(videoclip.duration)
@@ -134,6 +180,7 @@ def compose_clip(temp_file: str, broadcaster_name: str, **kwargs) -> CompositeVi
     return composite
 
 
+@call_before_after(urlcleanup)
 def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
     if _input is None:
         # loads data from the database
@@ -160,7 +207,7 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
         temporary_file: str = url_retrieve(clip["clip_url"])[0]
         broadcaster_name: str = clip["broadcaster_name"]
 
-        print(broadcaster_name, clip["_id"])
+        print(broadcaster_name, clip["_id"])  # todo transformer en log
 
         composite = compose_clip(temporary_file, broadcaster_name, duration=clip["duration"], width=1920, height=1080)
 
@@ -199,7 +246,6 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
 
     if subclips:
         fst, rst = subclips[0], subclips[1:]
-        import random
 
         title = clips[0]["title"]
         random.shuffle(rst)
@@ -279,9 +325,9 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
 
         # codec="h264_nvenc",
 
-        # video: CompositeVideoClip = concatenate_videoclips(x, method="compose", padding=-1)
-        # video.write_videofile(local_file, audio_codec="aac", verbose=False, fps=15, preset="placebo")
-        # video.close()
+        video: CompositeVideoClip = concatenate_videoclips(x, method="compose", padding=-1)
+        video.write_videofile(local_file, audio_codec="aac", verbose=False, fps=15, preset="placebo")
+        video.close()
 
     print("edit", _input, output)
     # TODO laoder

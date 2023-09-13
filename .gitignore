@@ -132,3 +132,13 @@ dmypy.json
 # abacus and reports from the workflow
 reports/
 .DS_Store
+
+# removes media files
+.png
+.jpeg
+.jpg
+.gif
+.svg
+.webp
+.mp4
+.mov

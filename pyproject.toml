@@ -102,7 +102,7 @@ max_line_length = 120
 
 [tool.pylama.linter.pycodestyle]
 convention = "google"
-ignore = "E501,E261,E201,E202,E302,E305,E731,W6,E402,W503,W605"
+ignore = "E501,E261,E201,E202,E203,E302,E305,E731,W6,E402,W503,W605"
 max_line_length = 120
 
 [tool.pylama.linter.pylint]
