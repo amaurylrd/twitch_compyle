@@ -67,8 +67,8 @@ build-backend = "poetry.core.masonry.api"
 requires = ["poetry-core>=1.2.0"]
 
 [tool.coverage.run]
-command_line = "-m unittest compyle.tests"
-include = ["*_test.py", "test_*.py"]
+command_line = "-m unittest discover compyle.tests"
+include = ["**/*_test.py", "**/test_*.py"]
 disable_warnings = ["no-data-collected"]
 
 [tool.coverage.report]
