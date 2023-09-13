@@ -3,8 +3,19 @@
 import logging
 import os
 import random
-from typing import Dict, Iterable, List, MutableMapping, Optional, Set, Tuple, TypeAlias
-from urllib.request import Request, urlcleanup, urlopen
+from http.client import HTTPMessage
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    MutableMapping,
+    Optional,
+    Set,
+    Tuple,
+    TypeAlias,
+)
+from urllib.request import Request, urlcleanup, urlopen, urlretrieve
 
 import cv2
 import numpy as np
@@ -23,6 +34,7 @@ from compyle.utils.decorators import call_before_after
 
 LOGGER = logging.getLogger(__name__)
 logging.getLogger("PIL.PngImagePlugin").setLevel(logging.ERROR)
+logging.getLogger("PIL.Image").setLevel(logging.ERROR)
 logging.getLogger("imageio_ffmpeg").setLevel(logging.ERROR)
 
 vec4: TypeAlias = List[Tuple[int, int, int, int]]
@@ -47,7 +59,7 @@ def get_latest_file(path: os.PathLike) -> Optional[str]:
 # pylint: disable=line-too-long
 def url_retrieve(
     url: str, data: Optional[Iterable[bytes]] = None, headers: MutableMapping[str, str] = None, size: int = -1
-) -> bytes:
+) -> tuple[str, HTTPMessage]:
     """Retrieves the specified url and returns the content.
 
     Args:
@@ -59,8 +71,9 @@ def url_retrieve(
     Returns:
         bytes: the content of the page.
     """
-    with urlopen(Request(url, data=data, headers=headers)) as response:  # nosec
-        return response.read(size)
+    return urlretrieve(url)
+    # with urlopen(Request(url, data=data, headers=headers)) as response:  # nosec
+    #     return response.read(size)
 
 
 def get_faces(image: cv2.Mat) -> List[vec4]:
@@ -202,6 +215,67 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
     _credits: Set[str] = set()
     subimages: Dict[str, cv2.Mat] = {}
 
+    def dfs(tab: Iterable[Dict[str, Any]], key: str, i: int = 0):
+        if len(tab) < 3 and i == len(tab):
+            return True
+
+        for j in range(i, len(tab)):
+            if i < 1 or tab[i - 1][key] != tab[j][key]:
+                tab[i], tab[j] = tab[j], tab[i]
+
+                if dfs(tab, key, i + 1):
+                    return True
+
+                tab[i], tab[j] = tab[j], tab[i]
+
+        return False
+
+    # shuffles the clips to avoid having the same broadcaster twice in a row
+    def rearrange(clips: List[Dict[str, str]], key=str) -> List[Dict[str, str]]:
+        # rule never 2 clips from the same broadcaster in a row
+
+        if dfs(clips, key, 1):
+            return clips
+
+        for i in range(len(clips) - 1):
+            broadcaster_name = clips[i][key]
+
+            if broadcaster_name == clips[i + 1][key]:
+                for j in range(1, len(clips)):
+                    if (
+                        j != i
+                        and j != i + 1
+                        and broadcaster_name not in (clips[k][key] for k in range(j - 1, min(j + 2, len(clips))))
+                        and (i + 2 >= len(clips) or clips[j][key] != clips[i + 2][key])
+                    ):
+                        clips[i + 1], clips[j] = clips[j], clips[i + 1]
+                        break
+
+        return clips
+
+    def is_valid(clips) -> bool:
+        for i in range(len(clips) - 1):
+            if clips[i]["broadcaster_name"] == clips[i + 1]["broadcaster_name"]:
+                return False
+        return True
+
+    test1 = [1, 2, 3, 3, 5, 5, 7, 8, 9, 9]
+    test = [1, 1, 1, 1, 1, 6, 6, 6, 6, 6, 6]  # expected false
+    test2 = [6, 6, 6, 6, 1, 1, 1, 1, 1, 6, 6]
+    test3 = [1, 1, 1, 3, 5, 5, 9, 9, 9, 9]
+    test4 = [1, 2, 3, 4, 4]
+    test5 = [1, 2, 3, 4, 4, 4]
+
+    tests = [test1, test, test2, test3, test4, test5]
+    for t in tests:
+        inp = [{"broadcaster_name": f"toto{i}"} for i in t]
+        t2 = rearrange(inp, "broadcaster_name")
+        print(is_valid(t2), t, [clip["broadcaster_name"][-1] for clip in t2])
+
+    exit()
+
+    clips = shuffle(clips)
+
     for clip in clips:
         # retrieve clip url and download clip file
         temporary_file: str = url_retrieve(clip["clip_url"])[0]
@@ -248,8 +322,6 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
         fst, rst = subclips[0], subclips[1:]
 
         title = clips[0]["title"]
-        random.shuffle(rst)
-        x = [fst, *rst]
 
         if not subimages:
             thumbnail = cv2.imread(url_retrieve(clips[0]["thumbnail_url"])[0])
@@ -325,7 +397,7 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
 
         # codec="h264_nvenc",
 
-        video: CompositeVideoClip = concatenate_videoclips(x, method="compose", padding=-1)
+        video: CompositeVideoClip = concatenate_videoclips(my_array, method="compose", padding=-1)
         video.write_videofile(local_file, audio_codec="aac", verbose=False, fps=15, preset="placebo")
         video.close()
 
