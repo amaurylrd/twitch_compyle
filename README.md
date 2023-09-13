@@ -1,14 +1,14 @@
 <!-- markdownlint-disable MD029 MD041 MD042 MD045 -->
 
-v0.0.1 [![License][license-bullet]][license-url] [![][status-bullet]][status-url] [![][status-bullet]][t]
+v0.0.1 [![License][license-bullet]][license-url] [![][status-bullet]][status-url]
 
+
+[status-url]: https://github.com/amaurylrd/twitch_compyle/actions/workflows/.github-ci.yaml
 [status-bullet]: https://github.com/amaurylrd/twitch_compyle/actions/workflows/.github-ci.yaml/badge.svg?branch=main
-[status-url]: .github/workflows/.github-ci.yaml
 
-[license-bullet]: https://img.shields.io/badge/License-Apache_2.0-blue.svg
 [license-url]: https://opensource.org/licenses/Apache-2.0
+[license-bullet]: https://img.shields.io/badge/License-Apache_2.0-blue.svg
 
-[t]: https://github.com/amaurylrd/twitch_compyle/actions/workflows/.github-ci.yaml
 # $${Com \color{red} py \color{black} le}$$
 
 ## Keywords
