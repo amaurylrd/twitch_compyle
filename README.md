@@ -8,10 +8,13 @@ v0.0.1 [![License][license-bullet]][license-url] [![][status-bullet]][status-url
 [license-url]: https://opensource.org/licenses/Apache-2.0
 [license-bullet]: https://img.shields.io/badge/License-Apache_2.0-blue.svg
 
-[![][pre-commit-bullet]][pre-commit-url]
+[![][pre-commit-bullet]][pre-commit-url] [![][renovate-bullet]][renovate-url]
 
 [pre-commit-url]:https://github.com/pre-commit/pre-commit
 [pre-commit-bullet]: https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit
+
+[renovate-url]:https://github.com/renovatebot/renovate
+[renovate-bullet]: https://img.shields.io/badge/renovate-enabled-brightgreen?logo=renovatebot
 
 
 # $${Com \color{red} py \color{black} le}$$
