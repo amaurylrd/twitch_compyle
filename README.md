@@ -69,6 +69,13 @@ poetry lock
 poetry install --sync
 ```
 
+And, if you later need to update the dependencies accordingly to the pyproject.toml:
+
+```sh
+poetry lock
+poetry update
+```
+
 Secondly refer to the [configuration guide](.github/docs/CONFIGURATION.md) for a documentated overview on how to configure the ``.env`` file.
 
 ### Run
