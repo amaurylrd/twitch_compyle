@@ -56,6 +56,10 @@ cd twitch_compyle/
 
 2. **Checkout** the main branch
 
+```sh
+git checkout main
+```
+
 ### Setup
 
 To setup this project, install the dependencies using poetry like so:
