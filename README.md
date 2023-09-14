@@ -91,7 +91,7 @@ python sources/main.py -h
 ### 🚧 Contribution
 
 If you are interested in the project, check the [development manual](.github/docs/CONTRIBUTING.md).
-Please review this guide for further information on how to get started on the project for developers and contributors.
+Please refer to this guide for further information on how to get started on the project for developers and contributors.
 
 ### 📫 Contact
 
