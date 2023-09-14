@@ -14,6 +14,7 @@ from typing import (
     Set,
     Tuple,
     TypeAlias,
+    Union,
 )
 from urllib.request import Request, urlcleanup, urlopen, urlretrieve
 
@@ -71,7 +72,7 @@ def url_retrieve(
     Returns:
         bytes: the content of the page.
     """
-    return urlretrieve(url)
+    return urlretrieve(url)  # nosec
     # with urlopen(Request(url, data=data, headers=headers)) as response:  # nosec
     #     return response.read(size)
 
@@ -81,6 +82,7 @@ def get_faces(image: cv2.Mat) -> List[vec4]:
 
     Args:
         image (cv2.Mat): the image to process.
+
     Returns:
         List[Tuple[int, int, int, int]]: the faces detected in the specified image.
     """
@@ -193,6 +195,54 @@ def compose_clip(file: str, broadcaster_name: str, **kwargs) -> CompositeVideoCl
     return composite
 
 
+def ne(data: Iterable[Union[Any, Dict[str, Any]]], key: Optional[str], i: int, j: int) -> bool:
+    """Tests if the specified list elements are different.
+
+    Args:
+        data (Iterable[Union[Any, Dict[str, Any]]]): the data to be tested.
+        key (Optional[str]): the key to use for the dictionaries comparison.
+        i (int): the first index (must be in range of data).
+        j (int): the second index (must be in range of data).
+
+    Returns:
+        bool: True if the specified data elements are different, False otherwise.
+    """
+    return data[i][key] != data[j][key] if key in data else data[i] != data[j]
+
+
+def dfs(data: Iterable[Union[Any, Dict[str, Any]]], key: Optional[str] = None, i: int = 0) -> bool:
+    """Shuffles the specified data to avoid having the same broadcaster twice in a row.
+
+    Args:
+        data (Iterable[Union[Any, Dict[str, Any]]]): either a list of elements or a list of dictionaries.
+        key (Optional[str], optional): the key to use for the dictionaries comparison. Defaults to None.
+        i (int, optional): the start index (0 or 1 expected). Defaults to 0.
+
+    Returns:
+        bool: True if the data has been shuffled or is already, False otherwise which means this is an impossible sort.
+    """
+    if len(data) < 3:
+        return True
+
+    if i >= len(data):
+        return False
+
+    if i == 0 or ne(data, key, i - 1, i):
+        if i + 1 == len(data) or dfs(data, key, i + 1):
+            return True
+
+    for j in range(i + 1, len(data)):
+        if i == 0 or ne(data, key, i - 1, j):
+            data[i], data[j] = data[j], data[i]
+
+            if i + 1 == len(data) or dfs(data, key, i + 1):
+                return True
+
+            data[i], data[j] = data[j], data[i]
+
+    return False
+
+
 @call_before_after(urlcleanup)
 def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
     if _input is None:
@@ -214,21 +264,6 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
     timestamps = ""
     _credits: Set[str] = set()
     subimages: Dict[str, cv2.Mat] = {}
-
-    def dfs(tab: Iterable[Dict[str, Any]], key: str, i: int = 0):
-        if len(tab) < 3 and i == len(tab):
-            return True
-
-        for j in range(i, len(tab)):
-            if i < 1 or tab[i - 1][key] != tab[j][key]:
-                tab[i], tab[j] = tab[j], tab[i]
-
-                if dfs(tab, key, i + 1):
-                    return True
-
-                tab[i], tab[j] = tab[j], tab[i]
-
-        return False
 
     # shuffles the clips to avoid having the same broadcaster twice in a row
     def rearrange(clips: List[Dict[str, str]], key=str) -> List[Dict[str, str]]:

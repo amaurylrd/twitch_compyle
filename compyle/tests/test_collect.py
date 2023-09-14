@@ -3,7 +3,7 @@ import os
 import pathlib
 import sys
 from typing import Any, Dict, Sequence
-from unittest import TestCase, mock, skip
+from unittest import TestCase, main, mock, skip
 
 from compyle.actions import collect
 
@@ -12,6 +12,7 @@ class TestParser(TestCase):
     maxDiff = None
 
     def setUp(self):
+        os.environ = {}
         self.original_stdout = sys.stdout
         self.original_stderr = sys.stderr
         sys.stdout = open(os.devnull, "w")
@@ -36,10 +37,6 @@ class TestCollect(TestParser):
         ".",
         "/dir1/dir2/",
     ]
-
-    def setUp(self):
-        os.environ = {}
-        return super().setUp()
 
     def parse_args(self, args: Sequence[str]) -> argparse.Namespace:
         return collect.get_parser(argparse.ArgumentParser().add_subparsers(required=True)).parse_args(args)
@@ -130,3 +127,7 @@ class TestCollect(TestParser):
 
         kwargs: Dict[str, Any] = dict(self.parse_args(["-out", self.output_files[0]])._get_kwargs())
         kwargs.pop("func")(**kwargs)
+
+
+if __name__ == "__main__":
+    main()
