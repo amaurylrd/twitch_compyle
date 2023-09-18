@@ -422,10 +422,10 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
         # bottomLeftCornerOfText = ((1920 - text_width) // 2, 1080 // 2 + baseline)
         # thickness // 2
 
-        marge = 0
+        merge = 0
         thumbnail[
-            (1080 - text_height) // 2 - marge : (1080 + text_height) // 2 + marge,
-            (1920 - text_width) // 2 - marge : (1920 + text_width) // 2 + marge,
+            (1080 - text_height) // 2 - merge : (1080 + text_height) // 2 + merge,
+            (1920 - text_width) // 2 - merge : (1920 + text_width) // 2 + merge,
         ] = (0, 0, 0)
         cv2.putText(thumbnail, title, bottomLeftCornerOfText, font, scale, color, thickness)
         thumbnail[bottomLeftCornerOfText[1] - baseline, :] = (0, 0, 255)
