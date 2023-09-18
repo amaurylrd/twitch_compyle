@@ -38,6 +38,7 @@ djangorestframework = "^3.14"
 requests = "2.31.0"
 moviepy = "1.0.3"
 opencv-python = ">=4.7.0"
+transformers = "^4.33.1"
 
 [tool.poetry.group.lint.dependencies]
 pre-commit = "^3.1"

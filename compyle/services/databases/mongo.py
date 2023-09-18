@@ -68,13 +68,13 @@ class MongoDB(metaclass=Singleton):
         LOGGER.debug("Connection information [host=%s, port=%s]", self.client.HOST, self.client.PORT)
 
         self.database: Database = self.client[MONGO_CONFIG.client_name]
-        LOGGER.debug("Connected to MongoDB database '%s'", self.database.name)
+        LOGGER.info("Connected to MongoDB database '%s'", self.database.name)
 
     def __disconnect(self):
         """Disconnects from the MongoDB database."""
         if self.client:
             self.client.close()
-            LOGGER.debug("Disconnected from MongoDB database '%s'", self.database.name)
+            LOGGER.info("Disconnected from MongoDB database '%s'", self.database.name)
 
     def __enter__(self) -> "MongoDB":
         """Connects to the MongoDB database and returns the instance.

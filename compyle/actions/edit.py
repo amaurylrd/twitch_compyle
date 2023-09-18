@@ -243,6 +243,31 @@ def dfs(data: Iterable[Union[Any, Dict[str, Any]]], key: Optional[str] = None, i
     return False
 
 
+def rearrange(clips: List[Dict[str, str]], key=str) -> List[Dict[str, str]]:
+    # TODO docstring
+    # rule never 2 clips from the same broadcaster in a row
+    # shuffles the clips to avoid having the same broadcaster twice in a row
+
+    if dfs(clips, key, 1):
+        return clips
+
+    for i in range(len(clips) - 1):
+        broadcaster_name = clips[i][key]
+
+        if broadcaster_name == clips[i + 1][key]:
+            for j in range(1, len(clips)):
+                if (
+                    j != i
+                    and j != i + 1
+                    and broadcaster_name not in (clips[k][key] for k in range(j - 1, min(j + 2, len(clips))))
+                    and (i + 2 >= len(clips) or clips[j][key] != clips[i + 2][key])
+                ):
+                    clips[i + 1], clips[j] = clips[j], clips[i + 1]
+                    break
+
+    return clips
+
+
 @call_before_after(urlcleanup)
 def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
     if _input is None:
@@ -265,51 +290,20 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
     _credits: Set[str] = set()
     subimages: Dict[str, cv2.Mat] = {}
 
-    # shuffles the clips to avoid having the same broadcaster twice in a row
-    def rearrange(clips: List[Dict[str, str]], key=str) -> List[Dict[str, str]]:
-        # rule never 2 clips from the same broadcaster in a row
+    # test1 = [1, 2, 3, 3, 5, 5, 7, 8, 9, 9]
+    # test = [1, 1, 1, 1, 1, 6, 6, 6, 6, 6, 6]  # expected false
+    # test2 = [6, 6, 6, 6, 1, 1, 1, 1, 1, 6, 6]
+    # test3 = [1, 1, 1, 3, 5, 5, 9, 9, 9, 9]
+    # test4 = [1, 2, 3, 4, 4]
+    # test5 = [1, 2, 3, 4, 4, 4]
 
-        if dfs(clips, key, 1):
-            return clips
+    # tests = [test1, test, test2, test3, test4, test5]
+    # for t in tests:
+    #     inp = [{"broadcaster_name": f"toto{i}"} for i in t]
+    #     t2 = rearrange(inp, "broadcaster_name")
+    #     print(is_valid(t2), t, [clip["broadcaster_name"][-1] for clip in t2])
 
-        for i in range(len(clips) - 1):
-            broadcaster_name = clips[i][key]
-
-            if broadcaster_name == clips[i + 1][key]:
-                for j in range(1, len(clips)):
-                    if (
-                        j != i
-                        and j != i + 1
-                        and broadcaster_name not in (clips[k][key] for k in range(j - 1, min(j + 2, len(clips))))
-                        and (i + 2 >= len(clips) or clips[j][key] != clips[i + 2][key])
-                    ):
-                        clips[i + 1], clips[j] = clips[j], clips[i + 1]
-                        break
-
-        return clips
-
-    def is_valid(clips) -> bool:
-        for i in range(len(clips) - 1):
-            if clips[i]["broadcaster_name"] == clips[i + 1]["broadcaster_name"]:
-                return False
-        return True
-
-    test1 = [1, 2, 3, 3, 5, 5, 7, 8, 9, 9]
-    test = [1, 1, 1, 1, 1, 6, 6, 6, 6, 6, 6]  # expected false
-    test2 = [6, 6, 6, 6, 1, 1, 1, 1, 1, 6, 6]
-    test3 = [1, 1, 1, 3, 5, 5, 9, 9, 9, 9]
-    test4 = [1, 2, 3, 4, 4]
-    test5 = [1, 2, 3, 4, 4, 4]
-
-    tests = [test1, test, test2, test3, test4, test5]
-    for t in tests:
-        inp = [{"broadcaster_name": f"toto{i}"} for i in t]
-        t2 = rearrange(inp, "broadcaster_name")
-        print(is_valid(t2), t, [clip["broadcaster_name"][-1] for clip in t2])
-
-    exit()
-
-    clips = shuffle(clips)
+    clips = rearrange(clips)
 
     for clip in clips:
         # retrieve clip url and download clip file
@@ -354,10 +348,6 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
                 )
 
     if subclips:
-        fst, rst = subclips[0], subclips[1:]
-
-        title = clips[0]["title"]
-
         if not subimages:
             thumbnail = cv2.imread(url_retrieve(clips[0]["thumbnail_url"])[0])
         elif len(subimages) == 4:
@@ -393,29 +383,52 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
                 print(i, subimage.shape, (width - border * 1.5, height - border * 1.5))
                 thumbnail[: subimage.shape[0], x1 : x1 + subimage.shape[1]] = subimage
 
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        # get boundary of this text
-        fontScale = 5
-        textsize = [i * fontScale for i in cv2.getTextSize(title, font, 1, 2)[0]]
-        bottomLeftCornerOfText = ((1920 - textsize[0]) // 2, (1080 + textsize[1]) // 2)
-        fontColor = (255, 255, 255)
+        # prompte video title
+        #
+        #
+        title = clips[0]["title"]
+        # from transformers import AutoModelForSequenceClassification
+
+        # # Charger le modèle BERT
+        # model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=8)
+
+        # # Définir les sentences à classer
+        # prompt = f"If needed rephrase this title of twitch clip {title} to be a good video title on youtube in french showcasing or emphasing the epicness of the performance"
+
+        # # Encoder les sentences
+        # encoded_data = model.encode([prompt], return_tensors="pt")
+
+        # # Effectuer la prédiction
+        # predicted_labels = model(encoded_data["input_ids"])
+
+        # # Décoder les labels prédits
+        # decoded_labels = model.decode(predicted_labels)
+
+        # https://www.kdnuggets.com/2023/05/huggingchat-python-api-alternative.html
+        title = title.upper()
+
+        # print(decoded_labels)
+
+        # TODO prompt thumbnail text
+        font = cv2.FONT_HERSHEY_DUPLEX
+        scale = 5
+        color = (255, 255, 255)
         thickness = 20
 
-        # cv2.putText(
-        #     thumbnail,
-        #     title.upper(),
-        #     (int(1920 - textsize[0] * 1.1) // 2, bottomLeftCornerOfText[1]),
-        #     font,
-        #     fontScale * 1.05,
-        #     (0, 0, 255),
-        #     thickness,
-        #     lineType,
-        # )
+        # gets the boundary of this text
+        (text_width, text_height), baseline = cv2.getTextSize(title, font, scale, thickness)
+        bottomLeftCornerOfText = ((1920 - text_width) // 2, (1080 + text_height) // 2)
+
+        # bottomLeftCornerOfText = ((1920 - text_width) // 2, 1080 // 2 + baseline)
+        # thickness // 2
+
+        marge = 0
         thumbnail[
-            (1080 - textsize[1]) // 2 - 50 : (1080 + textsize[1]) // 2 + 50,
-            (1920 - textsize[0]) // 2 - 50 : (1920 + textsize[0]) // 2 + 50,
+            (1080 - text_height) // 2 - marge : (1080 + text_height) // 2 + marge,
+            (1920 - text_width) // 2 - marge : (1920 + text_width) // 2 + marge,
         ] = (0, 0, 0)
-        cv2.putText(thumbnail, title.upper(), bottomLeftCornerOfText, font, fontScale, fontColor, thickness)
+        cv2.putText(thumbnail, title, bottomLeftCornerOfText, font, scale, color, thickness)
+        thumbnail[bottomLeftCornerOfText[1] - baseline, :] = (0, 0, 255)
 
         filename = r"thumbnail.png"
         if os.path.exists(filename):
@@ -430,10 +443,10 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
         if os.path.exists(local_file):
             os.remove(local_file)
 
-        # codec="h264_nvenc",
-
-        video: CompositeVideoClip = concatenate_videoclips(my_array, method="compose", padding=-1)
-        video.write_videofile(local_file, audio_codec="aac", verbose=False, fps=15, preset="placebo")
+        video: CompositeVideoClip = concatenate_videoclips(subclips, method="compose", padding=-1)
+        threads = os.cpu_count()
+        fps, preset = (15, "ultrafast") if os.getenv("DEBUG") else (video.fps, "placebo")
+        video.write_videofile(local_file, codec="libx264", audio_codec="aac", fps=fps, preset=preset, threads=threads)
         video.close()
 
     print("edit", _input, output)
