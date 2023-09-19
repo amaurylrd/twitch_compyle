@@ -180,9 +180,25 @@ def compose_clip(file: str, broadcaster_name: str, **kwargs) -> CompositeVideoCl
         # stroke_color="black",
         # stroke_width=1,
     )
-    textclip = textclip.set_duration(min(videoclip.duration, 5))
-    textclip = textclip.fx(slide_in, 1, "left")
-    textclip = textclip.fx(crossfadeout, 1)
+    from math import exp
+
+    textclip = textclip.set_duration(min(videoclip.duration, 6)).set_start(1.42)
+
+    def slide_in_and_out(t):
+        if t < 1:
+            return (-exp(-t * 5) * 500, 0)
+        elif t > 4:
+            return (-exp((t - 5) * 5) * 500, 0)
+        return (0, 0)
+
+    # TODO
+    # faire un jeu mobile: escalier parfait avec un barre de chargement (cf, touche du bas qd ca charge avec edit)
+    # True du cul
+    # False
+    textclip = textclip.set_position(slide_in_and_out)
+    # textclip = textclip.fx(slide_in, 1, "left")
+    # textclip = textclip.fx(crossfadeout, 1)
+
     textclip = textclip.margin(top=50, bottom=videoclip.h - textclip.h - 50, right=videoclip.w - textclip.w, opacity=0)
 
     # merge subclip and textclip into a composite clip
@@ -305,7 +321,7 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
 
     clips = rearrange(clips)
 
-    for clip in clips:
+    for clip in clips[:2]:
         # retrieve clip url and download clip file
         temporary_file: str = url_retrieve(clip["clip_url"])[0]
         broadcaster_name: str = clip["broadcaster_name"]
