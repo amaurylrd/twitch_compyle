@@ -186,10 +186,8 @@ class YoutubeAPI(Routable):
         params = {"part": "snippet", "regionCode": region_code}
 
         response = self.router.request("GET", "categories", header, **params)
-        categories = [(c["snippet"]["title"], c["id"]) for c in response["items"] if c["snippet"]["assignable"]]
-        print(categories)
 
-        return categories
+        return [(c["snippet"]["title"], c["id"]) for c in response["items"] if c["snippet"]["assignable"]]
 
     def is_category(self, category: int = 22) -> bool:
         header = {}
