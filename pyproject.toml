@@ -19,7 +19,7 @@ classifiers = [
     "Topic :: Utilities",
     "Intended Audience :: Developers",
     "Natural Language :: English",
-    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.11",
     "License :: Other/Proprietary License",
     "Operating System :: Microsoft :: Windows :: Windows 10",
     "Operating System :: Unix",
