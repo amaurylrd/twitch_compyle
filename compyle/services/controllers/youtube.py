@@ -19,6 +19,16 @@ class PrivacyStatus(Enum):
     UNLISTED = "unlisted"
 
 
+class Scopes(Enum):
+    YOUTUBE_ACCOUNT = "https://www.googleapis.com/auth/youtube"
+    CHANNEL_MEMBERSHIPS = "https://www.googleapis.com/auth/youtube.channel-memberships.creator"
+    FORCE_SSL = "https://www.googleapis.com/auth/youtube.force-ssl"
+    READ_ONLY = "https://www.googleapis.com/auth/youtube.readonly"
+    UPLOAD_VIDEOS = "https://www.googleapis.com/auth/youtube.upload"
+    YOUTUBE_PARTNER = "https://www.googleapis.com/auth/youtubepartner"
+    CHANNEL_AUDIT = "https://www.googleapis.com/auth/youtubepartner-channel-audit"
+
+
 class YoutubeAPI(Routable):
     """This class implements the Youtube data API v3 and OAuth 2.0 for authentication.
 
@@ -67,6 +77,7 @@ class YoutubeAPI(Routable):
         The response is sent back to your application using the redirect URL you specified.
 
         See:
+            https://developers.google.com/identity/protocols/oauth2?hl=en#webserver for the OAuth 2.0 flow and web server applications
             https://developers.google.com/identity/protocols/oauth2/web-server?hl=en#httprest_2
             https://developers.google.com/identity/protocols/oauth2/scopes#youtube for scopes
 
@@ -78,7 +89,7 @@ class YoutubeAPI(Routable):
         """
         params = {
             "client_id": self.client_id,
-            "scope": "https://www.googleapis.com/auth/youtube.upload",
+            "scope": Scopes.UPLOAD_VIDEOS.value,
             "access_type": "offline",
             "include_granted_scopes": "true",
             "response_type": "code",
@@ -90,8 +101,8 @@ class YoutubeAPI(Routable):
         if login_hint:
             params["login_hint"] = login_hint
 
-        response = self.router.request("POST", "auth", {}, **params, return_json=False)
-        response_uri = response.headers.get("Location") or response.url
+        response = self.router.request("POST", "auth", {}, return_json=False, **params)
+        response_uri: str = response.headers.get("Location") or response.url
 
         class RequestHandler(BaseHTTPRequestHandler):
             def do_GET(self):  # pylint: disable=invalid-name
@@ -100,8 +111,6 @@ class YoutubeAPI(Routable):
                 self.send_header("test", "text/html")
                 self.end_headers()
                 self.wfile.write(bytes(code, "utf-8"))
-
-        # x = urlparse("self.redirect_uri").hostname
 
         client_address = self.redirect_uri.rsplit(":", maxsplit=1)
         client_address[0] = client_address[0].split("://", maxsplit=1)[1]
@@ -177,9 +186,7 @@ class YoutubeAPI(Routable):
         params = {"part": "snippet", "regionCode": region_code}
 
         response = self.router.request("GET", "categories", header, **params)
-        categories = [
-            (item["snipper"]["title"], item["id"]) for item in response["items"] if item["snippet"]["assignable"]
-        ]
+        categories = [(c["snippet"]["title"], c["id"]) for c in response["items"] if c["snippet"]["assignable"]]
         print(categories)
 
         return categories
@@ -190,7 +197,7 @@ class YoutubeAPI(Routable):
 
         try:
             self.router.request("GET", "categories", header, **params)
-        except Exception as error:
+        except Exception as error:  # videoCategoryNotFound
             print(error)
             return False
 
@@ -218,7 +225,7 @@ class YoutubeAPI(Routable):
 
         body = {
             "snippet": {"title": title, "description": description, "tags": tags, "categoryId": category},
-            "status": {"privacyStatus": PrivacyStatus.PRIVATE},
+            "status": {"privacyStatus": PrivacyStatus.PRIVATE.value},
         }
         files = None
         values = {"DB": "photcat", "OUT": "csv", "SHORT": "short"}

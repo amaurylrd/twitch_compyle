@@ -171,6 +171,22 @@ class Endpoint:
         """
         return parse_qsl(urlparse(url).query, keep_blank_values=True)
 
+    @staticmethod
+    def add_url_params(url: str, **params) -> str:
+        """Adds the specified parameters to the url.
+
+        Args:
+            url (str): the url to add the parameters to.
+            **params: the parameters to be added.
+
+        Returns:
+            str: the url with the parameters added.
+        """
+        parts = urlparse(url)
+        query = dict(parse_qsl(parts.query, keep_blank_values=True)).update(params)
+
+        return urlunparse(parts._replace(query=urlencode(query)))
+
 
 class Method(Enum):
     """This enum represents the HTTP methods supported by the API."""
