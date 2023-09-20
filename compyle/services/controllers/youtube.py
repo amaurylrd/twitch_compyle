@@ -89,7 +89,7 @@ class YoutubeAPI(Routable):
         """
         params = {
             "client_id": self.client_id,
-            "scope": Scopes.UPLOAD_VIDEOS.value,
+            "scope": " ".join([Scopes.READ_ONLY.value, Scopes.UPLOAD_VIDEOS.value]),  # space-delimited list
             "access_type": "offline",
             "include_granted_scopes": "true",
             "response_type": "code",
