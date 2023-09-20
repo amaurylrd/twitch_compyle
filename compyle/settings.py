@@ -1,9 +1,12 @@
 from collections import namedtuple
 from os import getenv
+from typing import Final
 
 from dotenv import load_dotenv
 
 load_dotenv()
+
+DEBUG: Final = getenv("DEBUG") in ["True", "true"]
 
 # environment variables for the youtube service
 YOUTUBE_CONFIG = namedtuple("YOUTUBE_APP_CONFIG", ["client_id", "client_secret", "redirect_uri", "client_email"])(

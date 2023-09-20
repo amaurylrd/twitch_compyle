@@ -58,6 +58,7 @@ class YoutubeAPI(Routable):
 
         code = input("Enter the authorization code: ")
         self.access_token = self.get_access_token(code)
+        print(code, self.access_token)
 
     # pylint: disable=line-too-long
     def authentificate(self, login_hint: Optional[str] = None) -> str:
@@ -89,11 +90,11 @@ class YoutubeAPI(Routable):
         if login_hint:
             params["login_hint"] = login_hint
 
-        response = self.router.request("HEAD", "auth", {}, **params, return_json=False)
+        response = self.router.request("POST", "auth", {}, **params, return_json=False)
         response_uri = response.headers.get("Location") or response.url
 
         class RequestHandler(BaseHTTPRequestHandler):
-            def do_GET(self):
+            def do_GET(self):  # pylint: disable=invalid-name
                 code: str = parse_qs(urlparse(self.path).query)["code"][0]
                 self.send_response(200)
                 self.send_header("test", "text/html")
@@ -105,6 +106,7 @@ class YoutubeAPI(Routable):
         client_address = self.redirect_uri.rsplit(":", maxsplit=1)
         client_address[0] = client_address[0].split("://", maxsplit=1)[1]
         client_address[1] = int(client_address[1]) if len(client_address) > 1 else 80
+
         server = HTTPServer(tuple(client_address), RequestHandler)
 
         webbrowser.open(response_uri, new=2)
@@ -141,7 +143,7 @@ class YoutubeAPI(Routable):
 
         return self.router.request("POST", "token", header, **params)["access_token"]
 
-    def __request_header(self, *, acces_token: bool = True, **args) -> Dict[str, str]:
+    def __request_header(self, /, acces_token: bool = True, **args) -> Dict[str, str]:
         """Constructs and returns the request header.
 
         Args:
@@ -178,6 +180,7 @@ class YoutubeAPI(Routable):
         categories = [
             (item["snipper"]["title"], item["id"]) for item in response["items"] if item["snippet"]["assignable"]
         ]
+        print(categories)
 
         return categories
 

@@ -16,6 +16,7 @@ from typing import (
     TypeAlias,
     Union,
 )
+from compyle.settings import DEBUG
 from urllib.request import Request, urlcleanup, urlopen, urlretrieve
 
 import cv2
@@ -461,7 +462,7 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
 
         video: CompositeVideoClip = concatenate_videoclips(subclips, method="compose", padding=-1)
         threads = os.cpu_count()
-        fps, preset = (15, "ultrafast") if os.getenv("DEBUG") else (video.fps, "placebo")
+        fps, preset = (15, "ultrafast") if DEBUG else (video.fps, "placebo")
         video.write_videofile(local_file, codec="libx264", audio_codec="aac", fps=fps, preset=preset, threads=threads)
         video.close()
 

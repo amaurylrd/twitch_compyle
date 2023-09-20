@@ -42,7 +42,7 @@ class TwitchAPI(Routable):
         # generates a new client access token
         self.access_token: str = self.get_new_access_token()
 
-    def __request_header(self, *, client_id: bool = True, acces_token: bool = True, **args) -> Dict[str, str]:
+    def __request_header(self, /, client_id: bool = True, acces_token: bool = True, **args) -> Dict[str, str]:
         """Constructs and returns the request header.
 
         Args:

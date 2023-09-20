@@ -16,6 +16,7 @@ import toml
 
 from compyle.actions import collect
 from compyle.actions.edit import edit
+from compyle.settings import DEBUG
 
 DEFAULT_REPORT_FOLDER = "reports/"
 DEFAULT_VIDEO_FOLDER = "videos/"
@@ -40,7 +41,7 @@ def main():
         "--verbose",
         action="count",
         help="increase the verbosity (default: WARNING, -v: INFO, -vv: DEBUG)",
-        default=len(levels) - 1 if getenv("DEBUG") in ["True", "true"] else 0,
+        default=len(levels) - 1 if DEBUG else 0,
     )
 
     # creates the subparser for the sub commands

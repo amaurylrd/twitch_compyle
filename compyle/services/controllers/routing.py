@@ -303,7 +303,7 @@ class Router:
         Args:
             method (str): the HTTP method to be used.
             url (str): the url to be used for the HTTP request.
-            header (dict): the header to be normalized and used for the HTTP request.
+            header (Dict[str, str]): the header to be normalized and used for the HTTP request.
 
         Raises:
             ValueError: if the specified method in not a valid HTTP method.
@@ -324,7 +324,7 @@ class Router:
         except requests.exceptions.HTTPError as error:
             raise error
         finally:
-            LOGGER.debug(
+            LOGGER.info(
                 "Request %s %s, respond with status %s in %.3fs",
                 method,
                 url.split("?", maxsplit=1)[0].split("/")[-1],
@@ -366,7 +366,7 @@ class Router:
             Any: the response or the JSON-encoded content if the option is specified.
         """
         url: str = self.route(namespace, **params)
-        response: requests.Response = self.__execute_request(method, url, {} if header is None else header)
+        response: requests.Response = self.__execute_request(method, url, header or {})
 
         backoff: float = 0.5  # in seconds
         max_retries: int = 3
@@ -376,7 +376,7 @@ class Router:
             LOGGER.debug("The backoff delay has been set to %.2s seconds", backoff)
 
             if response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE:
-                LOGGER.debug(
+                LOGGER.info(
                     """You may check the API status page %sfor relevant updates and details on health
                     and incidents.""",
                     "(" + self.status_page + ") " if self.status_page else "",
@@ -386,7 +386,7 @@ class Router:
                 reset: datetime = datetime.fromtimestamp(epoch_timestamp)
                 delta: timedelta = reset - datetime.now(tz=reset.tzinfo)
 
-                LOGGER.debug(
+                LOGGER.info(
                     "The bucket runs out of points within the last minute, it will be reset to full under %f",
                     delta.total_seconds(),
                 )

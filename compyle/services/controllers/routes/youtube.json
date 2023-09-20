@@ -35,7 +35,8 @@
     ],
     "opt": [
       "id",
-      "regionCode"
+      "regionCode",
+      "hl"
     ]
   },
   "upload": {
