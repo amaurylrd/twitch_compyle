@@ -125,7 +125,7 @@ class TwitchAPI(Routable):
         """Returns the game id from its name.
 
         See:
-            https://dev.twitch.tv/docs/api/reference/#get-games
+            :func:`get_game` for related information.
 
         Example:
             >>> game_name = "VALORANT"
@@ -138,12 +138,35 @@ class TwitchAPI(Routable):
         Returns:
             str: the id of the game if the response was a success.
         """
+        return self.get_game(game_name)["id"]
+
+    def get_game(self, game_name: str) -> Any:
+        """Gets the information about the game with the specified name.
+
+        See:
+            https://dev.twitch.tv/docs/api/reference/#get-games
+
+        Example:
+            >>> game_name = "VALORANT"
+            >>> self.get_game_id(game_name)
+            >>> {"id": "516575", "name": "VALORANT", "box_art_url": "...", ...}
+
+        Args:
+            game_name (str): the name of the game to search for.
+
+        Returns:
+            Any: the information about the game if the response was a success.
+        """
         header = self.__request_header()
         params = {"name": game_name}
 
         response = self.router.request("GET", "game", header, **params)
+        result = response["data"][0]
 
-        return response["data"][0]["id"]
+        if result["igdb_id"] != "":
+            result["igdb_url"] = f"https://www.igdb.com/g/{result['igdb_id']}"
+
+        return result
 
     def get_game_clips(self, game_id: str, *, limit=100, period=3) -> List[Any]:
         """Returns the top clips for the specified game.
@@ -227,7 +250,11 @@ class TwitchAPI(Routable):
                         and abs(clip["vod_offset"] - c["vod_offset"]) <= max(clip["duration"], c["duration"])
                         for c in clips
                     ):
+                        # adds new attributes to the clip
                         clip["clip_url"] = self.get_clip_url(clip)
+                        clip["broadcaster_url"] = self.get_broadcaster_url(clip["broadcaster_name"])
+
+                        # appends the clip to the list of clips
                         clips.append(clip)
 
                         # stops the parsing if enough clips were found
@@ -236,6 +263,7 @@ class TwitchAPI(Routable):
 
             params["after"] = response["pagination"]["cursor"]
 
+        # sorts the clips by view count and creation date
         clips.sort(key=lambda clip: (clip["view_count"], clip["created_at"]), reverse=True)
 
         return clips
@@ -281,3 +309,14 @@ class TwitchAPI(Routable):
         params = {"id": clip_id}
 
         return self.router.request("GET", "clip", header, **params)["data"][0]
+
+    def get_broadcaster_url(self, broadcaster_name: str) -> str:
+        """Returns the URL of the specified broadcaster.
+
+        Args:
+            broadcaster_name (str): the name of the broadcaster.
+
+        Returns:
+            str: the URL of the broadcaster.
+        """
+        return f"https://www.twitch.tv/{broadcaster_name}"

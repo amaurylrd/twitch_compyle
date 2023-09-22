@@ -39,7 +39,7 @@ logging.getLogger("PIL.PngImagePlugin").setLevel(logging.ERROR)
 logging.getLogger("PIL.Image").setLevel(logging.ERROR)
 logging.getLogger("imageio_ffmpeg").setLevel(logging.ERROR)
 
-vec4: TypeAlias = List[Tuple[int, int, int, int]]
+vec4: TypeAlias = Tuple[int, int, int, int]
 
 
 def get_latest_file(path: os.PathLike) -> Optional[str]:
@@ -78,6 +78,10 @@ def url_retrieve(
     #     return response.read(size)
 
 
+cascade: str = "./opencv/haarcascades/frontalface.xml"
+classifier: cv2.CascadeClassifier = cv2.CascadeClassifier(cascade)
+
+
 def get_faces(image: cv2.Mat) -> List[vec4]:
     """Returns the faces detected in the specified image.
 
@@ -92,9 +96,7 @@ def get_faces(image: cv2.Mat) -> List[vec4]:
     grayscale: cv2.Mat = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     grayscale: cv2.Mat = cv2.equalizeHist(grayscale)
 
-    cascade: str = "./opencv/haarcascades/frontalface.xml"
-    classifier: cv2.CascadeClassifier = cv2.CascadeClassifier(cascade)
-
+    # TODO timer pour le temps de détection
     return classifier.detectMultiScale(
         grayscale,
         scaleFactor=1.3,
@@ -102,15 +104,16 @@ def get_faces(image: cv2.Mat) -> List[vec4]:
         minSize=(30, 30),
         flags=cv2.CASCADE_SCALE_IMAGE,
     )
+    # TODO mettre une minsize en forme de visage et plus grande que 30
 
 
-def find_crop(image: cv2.Mat, face: vec4, factor: float = 1.5, ratio: float = 16 / 9) -> vec4:
+def find_crop(image: cv2.Mat, face: vec4, *, scale: float = 1, ratio: float = 16 / 9) -> vec4:
     """Finds the crop coordinates for the specified image and face.
 
     Args:
         image (cv2.Mat): the image to process.
         face (vec4): the face coordinates.
-        factor (float, optional): the scale factor to apply. Defaults to 1.5.
+        scale (float, optional): the scale factor to apply. Defaults to 1.
         ratio (float, optional): the ratio to satisfy. Defaults to 16/9.
 
     Returns:
@@ -120,12 +123,12 @@ def find_crop(image: cv2.Mat, face: vec4, factor: float = 1.5, ratio: float = 16
     center: Tuple[int, int] = x + w // 2, y + h // 2
 
     if w > h * ratio:
-        neww = int(w * factor)
+        neww = int(w * scale)
         newh = int(neww / ratio)
         newx = center[0] - neww // 2
         newy = center[1] - newh // 2
     else:
-        newh = int(h * factor)
+        newh = int(h * scale)
         neww = int(newh * ratio)
         newy = center[1] - newh // 2
         newx = center[0] - neww // 2
@@ -152,6 +155,76 @@ def find_crop(image: cv2.Mat, face: vec4, factor: float = 1.5, ratio: float = 16
         newy = image.shape[0] - newh
 
     return newx, newy, neww, newh
+
+
+def sharpen_image(image: cv2.Mat) -> cv2.Mat:
+    kernel = np.array([[0, -1, 0], [-1, 3, -1], [0, -1, 0]])
+    return cv2.filter2D(image, -1, kernel)
+
+
+def get_thumbnail(
+    subimages: Dict[str, Tuple[vec4, cv2.Mat]],
+    default: Dict[str, str],
+    border_color: Tuple[int, int, int] = (114, 181, 209),
+    border_size: int = 20,
+    scale: float = 1.5,
+):
+    if not subimages:
+        return cv2.imread(url_retrieve(default["thumbnail_url"])[0])
+
+    # TODO get_gradiant
+
+    # fills the thumbnail with black pixels in column-major order
+    thumbnail = np.full((1080, 1920, len(border_color)), border_color, np.uint8)
+
+    if len(subimages) == 4:
+        # gets the quarter of the size of the thumbnail
+        height, width = tuple(size // 2 for size in thumbnail.shape[:2])
+
+        # resizes and crops the subimages onto the thumbnail in cross shape
+        for i, (face, subimage) in enumerate(subimages.values()):
+            # finds the largest crop around the face respecting the specified ratio
+            dsize = (width - int(border_size * 1.5), height - int(border_size * 1.5))
+            x, y, w, h = find_crop(subimage, face, scale=scale, ratio=dsize[0] / dsize[1])
+
+            # crops the subimage to fit the crop
+            subimage = subimage[y : y + h, x : x + w]
+
+            # resizes the subimage the thumbnail quarter less the borders size
+            subimage = cv2.resize(subimage, dsize)
+
+            # TODO Suppr subimage = cv2.copyMakeBorder(subimage, *([border_size] * 4), cv2.BORDER_CONSTANT, value=border_color)
+
+            # retrieves the coordinates of the subimage in the thumbnail
+            x, y = (width - border_size // 2) * (i % 2) + border_size, (height - border_size // 2) * (
+                i // 2
+            ) + border_size
+
+            # adds the subimage to the thumbnail
+            thumbnail[y : y + subimage.shape[0], x : x + subimage.shape[1]] = sharpen_image(subimage)
+    else:
+        height, width = thumbnail.shape[0], thumbnail.shape[1] // len(subimages)
+
+        # resizes and crops vertically the subimages onto the thumbnail
+        for i, (face, subimage) in enumerate(subimages.values()):
+            # crops the largest subimage around the face respecting the specified ratio
+            x, y, w, h = find_crop(subimage, face, scale=scale, ratio=16 / 9 / len(subimages))
+            subimage = subimage[y : y + h, x : x + w]
+            subimage = cv2.resize(
+                subimage, (width - int(border_size + border_size / len(subimages)), height - border_size * 2)
+            )
+            subimage = cv2.copyMakeBorder(subimage, *([border_size] * 4), cv2.BORDER_CONSTANT, value=border_color)
+
+            x = (width - int(border_size / len(subimages))) * i
+            if i == len(subimages) - 1:
+                x = thumbnail.shape[1] - subimage.shape[1]
+
+            print(x, subimage.shape[1])
+            print(i, subimage.shape, (width - border_size * scale, height - border_size * scale))
+
+            thumbnail[: subimage.shape[0], x : x + subimage.shape[1]] = subimage
+
+    return thumbnail
 
 
 def compose_clip(file: str, broadcaster_name: str, **kwargs) -> CompositeVideoClip:
@@ -188,7 +261,7 @@ def compose_clip(file: str, broadcaster_name: str, **kwargs) -> CompositeVideoCl
     def slide_in_and_out(t):
         if t < 1:
             return (-exp(-t * 5) * 500, 0)
-        elif t > 4:
+        if t > 4:
             return (-exp((t - 5) * 5) * 500, 0)
         return (0, 0)
 
@@ -224,7 +297,7 @@ def ne(data: Iterable[Union[Any, Dict[str, Any]]], key: Optional[str], i: int, j
     Returns:
         bool: True if the specified data elements are different, False otherwise.
     """
-    return data[i][key] != data[j][key] if key in data else data[i] != data[j]
+    return data[i][key] != data[j][key]
 
 
 def dfs(data: Iterable[Union[Any, Dict[str, Any]]], key: Optional[str] = None, i: int = 0) -> bool:
@@ -238,21 +311,18 @@ def dfs(data: Iterable[Union[Any, Dict[str, Any]]], key: Optional[str] = None, i
     Returns:
         bool: True if the data has been shuffled or is already, False otherwise which means this is an impossible sort.
     """
-    if len(data) < 3:
+    if len(data) < 3 or i == len(data):
         return True
 
-    if i >= len(data):
-        return False
-
-    if i == 0 or ne(data, key, i - 1, i):
-        if i + 1 == len(data) or dfs(data, key, i + 1):
+    if i == 0 or ne(data, key, i, i):
+        if dfs(data, key, i + 1):
             return True
 
     for j in range(i + 1, len(data)):
         if i == 0 or ne(data, key, i - 1, j):
             data[i], data[j] = data[j], data[i]
 
-            if i + 1 == len(data) or dfs(data, key, i + 1):
+            if dfs(data, key, i + 1):
                 return True
 
             data[i], data[j] = data[j], data[i]
@@ -260,27 +330,28 @@ def dfs(data: Iterable[Union[Any, Dict[str, Any]]], key: Optional[str] = None, i
     return False
 
 
-def rearrange(clips: List[Dict[str, str]], key=str) -> List[Dict[str, str]]:
+def rearrange(clips: List[Dict[str, str]], key: str, max_length: int = 15) -> List[Dict[str, str]]:
     # TODO docstring
     # rule never 2 clips from the same broadcaster in a row
     # shuffles the clips to avoid having the same broadcaster twice in a row
 
-    if dfs(clips, key, 1):
+    if len(clips) < max_length and dfs(clips, key, 1):
         return clips
 
-    for i in range(len(clips) - 1):
-        broadcaster_name = clips[i][key]
+    # TODO faire une fonction de fall_back
+    # for i in range(len(clips) - 1):
+    #     broadcaster_name = clips[i][key]
 
-        if broadcaster_name == clips[i + 1][key]:
-            for j in range(1, len(clips)):
-                if (
-                    j != i
-                    and j != i + 1
-                    and broadcaster_name not in (clips[k][key] for k in range(j - 1, min(j + 2, len(clips))))
-                    and (i + 2 >= len(clips) or clips[j][key] != clips[i + 2][key])
-                ):
-                    clips[i + 1], clips[j] = clips[j], clips[i + 1]
-                    break
+    #     if broadcaster_name == clips[i + 1][key]:
+    #         for j in range(1, len(clips)):
+    #             if (
+    #                 j != i
+    #                 and j != i + 1
+    #                 and broadcaster_name not in (clips[k][key] for k in range(j - 1, min(j + 2, len(clips))))
+    #                 and (i + 2 >= len(clips) or clips[j][key] != clips[i + 2][key])
+    #             ):
+    #                 clips[i + 1], clips[j] = clips[j], clips[i + 1]
+    #                 break
 
     return clips
 
@@ -290,7 +361,14 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
     if _input is None:
         # loads data from the database
         with MongoDB() as mongo_db:
-            clips = mongo_db.get_documents("clips")  # todo filter ceux non utilisé pour des clips
+            # clips = mongo_db.get_documents("clips")  # todo filter ceux non utilisé pour des clips
+            # limit=20, sum(duration) == 10
+            clips = mongo_db.get_documents("clips", limit=20)
+
+            # top 20
+            # most viewed
+            # most recent
+
     else:
         # stores the clips data in the filesystem
         # if output.endswith("/") or os.path.isdir(output):
@@ -300,7 +378,6 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
         clips = []
         pass
 
-    clips = clips[-10:]
     subclips = []
     subclips_duration = 0
     timestamps = ""
@@ -320,22 +397,23 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
     #     t2 = rearrange(inp, "broadcaster_name")
     #     print(is_valid(t2), t, [clip["broadcaster_name"][-1] for clip in t2])
 
-    clips = rearrange(clips)
+    rearrange(clips, key="broadcaster_name")
 
-    for clip in clips[:2]:
-        # retrieve clip url and download clip file
+    for clip in clips:
+        # retrieves clip url and downloads clip file
         temporary_file: str = url_retrieve(clip["clip_url"])[0]
         broadcaster_name: str = clip["broadcaster_name"]
 
         print(broadcaster_name, clip["_id"])  # todo transformer en log
 
+        # TODO timer pour le file download
         composite = compose_clip(temporary_file, broadcaster_name, duration=clip["duration"], width=1920, height=1080)
 
-        # add crossfadein transition between subclips
+        # adds crossfadein transition between subclips
         if subclips:
             composite = composite.fx(crossfadein, 1)
 
-        # append composite clip to subclips
+        # appends composite clip to subclips
         subclips.append(composite)
 
         # updating timestamps and description
@@ -344,7 +422,7 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
         timestamp = f"{minutes:02d}:{seconds:02d}"
         timestamps += f"{timestamp} {broadcaster_name}\n"
         subclips_duration += composite.duration
-        credit = f"{broadcaster_name} - https://www.twitch.tv/{broadcaster_name}"
+        credit = f"{broadcaster_name} - {clip['broadcaster_url']}"
         _credits.add(credit)
 
         if len(subimages) < 4 and broadcaster_name not in subimages:
@@ -352,7 +430,7 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
             faces = get_faces(image)
 
             i = 0
-            step = composite.duration // 10
+            step = int(round(composite.duration / 10))
             while len(faces) < 1 and i < composite.duration:
                 image = composite.get_frame(i)
                 faces = get_faces(image)
@@ -365,41 +443,6 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
                 )
 
     if subclips:
-        if not subimages:
-            thumbnail = cv2.imread(url_retrieve(clips[0]["thumbnail_url"])[0])
-        elif len(subimages) == 4:
-            thumbnail = np.zeros((1080, 1920, 3), np.uint8)
-            height, width = tuple(size // 2 for size in thumbnail.shape[:2])
-
-            for i, (face, subimage) in enumerate(subimages.values()):
-                x, y, w, h = find_crop(image, face)
-                subimage = subimage[y : y + h, x : x + w]
-
-                border = 20
-                subimage = cv2.resize(subimage, (width - int(border * 1.5), height - int(border * 1.5)))
-                subimage = cv2.copyMakeBorder(subimage, *([border] * 4), cv2.BORDER_CONSTANT, value=0)
-                x, y = (width - border // 2) * (i % 2), (height - border // 2) * (i // 2)
-                thumbnail[y : y + subimage.shape[0], x : x + subimage.shape[1]] = subimage
-        else:
-            thumbnail = np.zeros((1080, 1920, 3), np.uint8)
-            height, width = thumbnail.shape[0], thumbnail.shape[1] // len(subimages)
-            for i, (face, subimage) in enumerate(subimages.values()):
-                x, y, w, h = find_crop(image, face, factor=1.5, ratio=(16 / 9) / len(subimages))
-                print(x, y, w, h)
-                subimage = subimage[y : y + h, x : x + w]
-
-                border = 20
-                subimage = cv2.resize(
-                    subimage, (width - int(border + border / len(subimages)), height - int(border * 2))
-                )
-                subimage = cv2.copyMakeBorder(subimage, *([border] * 4), cv2.BORDER_CONSTANT, value=(100, 35, 200))
-                x1 = (width - int(border / len(subimages))) * i
-                if i == len(subimages) - 1:
-                    x1 = thumbnail.shape[1] - subimage.shape[1]
-                print(x1, subimage.shape[1])
-                print(i, subimage.shape, (width - border * 1.5, height - border * 1.5))
-                thumbnail[: subimage.shape[0], x1 : x1 + subimage.shape[1]] = subimage
-
         # prompte video title
         #
         #
@@ -426,7 +469,9 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
 
         # print(decoded_labels)
 
+        thumbnail = get_thumbnail(subimages, clips[0])
         # TODO prompt thumbnail text
+
         font = cv2.FONT_HERSHEY_DUPLEX
         scale = 5
         color = (255, 255, 255)
@@ -463,7 +508,7 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
         video: CompositeVideoClip = concatenate_videoclips(subclips, method="compose", padding=-1)
         threads = os.cpu_count()
         fps, preset = (15, "ultrafast") if DEBUG else (video.fps, "placebo")
-        video.write_videofile(local_file, codec="libx264", audio_codec="aac", fps=fps, preset=preset, threads=threads)
+        # video.write_videofile(local_file, codec="libx264", audio_codec="aac", fps=fps, preset=preset, threads=threads)
         video.close()
 
     print("edit", _input, output)

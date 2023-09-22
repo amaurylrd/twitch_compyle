@@ -198,12 +198,13 @@ class MongoDB(metaclass=Singleton):
     def get_documents(
         self,
         collection: str,
-        query: dict = None,
+        query: dict = {},
         projection=None,
         limit=0,
         offset=0,
-        sorts_list=None,
+        sort={},
         batch_size=100,
+        group_field=None,
     ) -> list:
         """Queries documents from the specified collection with the specified filter parameters.
 
@@ -213,8 +214,8 @@ class MongoDB(metaclass=Singleton):
             projection (Dict[str, str], optional): fields be to to excluded from the result. Defaults to None.
             limit (int, optional): the maximum number of results to return. Defaults to 0 (no limit).
             offset (int, optional): the number of documents to omit (from the start of the result set).
-            sorts_list (Dict[str, str], optional): the list of (key, direction) pairs specifying the sort order. Defaults to None.
-            batch_size (int, optional): the . Defaults to 100.
+            sort (Dict[str, int], optional): the list of (key, direction) pairs specifying the sort order. Defaults to None.
+            batch_size (int, optional): the number of documents to return in each batch. Defaults to 100.
 
         Returns:
             list: _description_
@@ -231,9 +232,30 @@ class MongoDB(metaclass=Singleton):
 
         # if no query, get all documents
 
-        cursor = self.database[collection].find(
-            filter=query, projection=projection, skip=offset, limit=limit, sort=sorts_list, batch_size=batch_size
-        )
+        # self.database[collection].distinct("_id", query)
+        # cursor = self.database[collection].find(
+        #     filter=query, projection=projection, skip=offset, limit=limit, sort=sorts_list, batch_size=batch_size
+        # )
+
+        group_field = "id"
+        sort = {"view_count": -1, "created_at": -1}
+        # "$project": {"data": 1}}
+
+        group = {"data": {"$push": "$$ROOT"}}
+        if group_field:
+            group["_id"] = f"${group_field}"
+
+        pipeline = [
+            {"$match": query},
+            {"$sort": sort},
+            {"$skip": offset},
+            {"$limit": limit},
+            {"$group": group},
+            {"$project": {"data": {"$arrayElemAt": ["$data", 0]}}},
+            {"$replaceRoot": {"newRoot": "$data"}},
+        ]
+
+        cursor = self.database[collection].aggregate(pipeline, allowDiskUse=True)
 
         return list(cursor)
 

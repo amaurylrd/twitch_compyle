@@ -21,7 +21,6 @@ from compyle.settings import DEBUG
 DEFAULT_REPORT_FOLDER = "reports/"
 DEFAULT_VIDEO_FOLDER = "videos/"
 
-
 def main():
     # defines the logging levels from the least verbose to the most
     levels = (logging.WARNING, logging.INFO, logging.DEBUG)
