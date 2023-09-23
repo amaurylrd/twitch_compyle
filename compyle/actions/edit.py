@@ -158,7 +158,7 @@ def find_crop(image: cv2.Mat, face: vec4, *, scale: float = 1, ratio: float = 16
 
 
 def sharpen_image(image: cv2.Mat) -> cv2.Mat:
-    kernel = np.array([[0, -1, 0], [-1, 3, -1], [0, -1, 0]])
+    kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
     return cv2.filter2D(image, -1, kernel)
 
 
@@ -201,7 +201,7 @@ def get_thumbnail(
             ) + border_size
 
             # adds the subimage to the thumbnail
-            thumbnail[y : y + subimage.shape[0], x : x + subimage.shape[1]] = sharpen_image(subimage)
+            thumbnail[y : y + subimage.shape[0], x : x + subimage.shape[1]] = subimage  # (subimage)
     else:
         height, width = thumbnail.shape[0], thumbnail.shape[1] // len(subimages)
 
