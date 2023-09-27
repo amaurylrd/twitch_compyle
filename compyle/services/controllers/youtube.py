@@ -1,7 +1,11 @@
+import os
+import sys
 import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Dict, List, Optional, Tuple
 from urllib.parse import parse_qs, urlparse
+
+from requests import HTTPError
 
 from compyle.services.controllers.routing import Routable
 from compyle.settings import YOUTUBE_CONFIG
@@ -20,6 +24,8 @@ class PrivacyStatus(Enum):
 
 
 class Scopes(Enum):
+    """Represents the scopes for the Youtube API service."""
+
     YOUTUBE_ACCOUNT = "https://www.googleapis.com/auth/youtube"
     CHANNEL_MEMBERSHIPS = "https://www.googleapis.com/auth/youtube.channel-memberships.creator"
     FORCE_SSL = "https://www.googleapis.com/auth/youtube.force-ssl"
@@ -33,7 +39,7 @@ class YoutubeAPI(Routable):
     """This class implements the Youtube data API v3 and OAuth 2.0 for authentication.
 
     See:
-        https://console.cloud.google.com/apis/library/youtube.googleapis.com
+        https://console.cloud.google.com/apis/library/youtube.googleapis.com.
     """
 
     __metaclass__ = Singleton
@@ -65,10 +71,9 @@ class YoutubeAPI(Routable):
 
         # retrieves the authorization code from authentication service
         autorization_code: str = self.authentificate(user_email_address)
-
+        # TODO réparer ici
         code = input("Enter the authorization code: ")
         self.access_token = self.get_access_token(code)
-        print(code, self.access_token)
 
     # pylint: disable=line-too-long
     def authentificate(self, login_hint: Optional[str] = None) -> str:
@@ -77,9 +82,9 @@ class YoutubeAPI(Routable):
         The response is sent back to your application using the redirect URL you specified.
 
         See:
-            https://developers.google.com/identity/protocols/oauth2?hl=en#webserver for the OAuth 2.0 flow and web server applications
-            https://developers.google.com/identity/protocols/oauth2/web-server?hl=en#httprest_2
-            https://developers.google.com/identity/protocols/oauth2/scopes#youtube for scopes
+            https://developers.google.com/identity/protocols/oauth2?hl=en#webserver for the OAuth 2.0 flow and web server applications.
+            https://developers.google.com/identity/protocols/oauth2/web-server?hl=en#httprest_2 for the Authorization Code Flow.
+            https://developers.google.com/identity/protocols/oauth2/scopes#youtube for scopes.
 
         Params:
             login_hint (Optional[str]): the email address of the user to log in. Defaults to None.
@@ -129,7 +134,7 @@ class YoutubeAPI(Routable):
         """Retrieves the access token from the authorization code following the Authorization Code Flow.
 
         See:
-            https://developers.google.com/identity/protocols/oauth2/web-server?hl=en#httprest_3
+            https://developers.google.com/identity/protocols/oauth2/web-server?hl=en#httprest_3.
 
         Example:
             >>> this.get_access_token(self.authentificate())
@@ -152,17 +157,39 @@ class YoutubeAPI(Routable):
 
         return self.router.request("POST", "token", header, **params)["access_token"]
 
-    def __request_header(self, /, acces_token: bool = True, **args) -> Dict[str, str]:
+    def refresh_access_token(self, refresh_token: str):
+        """Refreshes the access token from the refresh token.
+
+        See:
+            https://developers.google.com/youtube/v3/guides/auth/installed-apps?hl=en#offline for refreshing token.
+
+        Args:
+            refresh_token (str): the refresh token.
+
+        Returns:
+            str: the access token if the request was a success.
+        """
+        header = {"Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json"}
+        params = {
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+            "refresh_token": refresh_token,
+            "grant_type": "refresh_token",
+        }
+
+        return self.router.request("POST", "token", header, **params)["access_token"]
+
+    def __request_header(self, /, acces_token: bool = True, **kwargs) -> Dict[str, str]:
         """Constructs and returns the request header.
 
         Args:
-            acces_token (bool, optional): appends the access token if `True`. Defaults to `True`.
-            **args: the additional header attributes.
+            acces_token (bool, optional): appends the access token to the header if `True`. Defaults to `True`.
+            **kwargs: the additional header attributes.
 
         Returns:
             Dict[str, str]: the common request header with the specified attributes.
         """
-        header = {"Accept": "application/json", **args}
+        header = {"Accept": "application/json", **kwargs}
 
         if acces_token and self.access_token:
             header["Authorization"] = f"Bearer {self.access_token}"
@@ -189,47 +216,90 @@ class YoutubeAPI(Routable):
 
         return [(c["snippet"]["title"], c["id"]) for c in response["items"] if c["snippet"]["assignable"]]
 
-    def is_category(self, category: int = 22) -> bool:
-        header = {}
+    def is_category(self, category: str = "22") -> bool:
+        """Tells if the specified category exists.
+
+        Args:
+            category (str, optional): the category id. Defaults to "22".
+
+        Returns:
+            bool: True if the category exists, False in case videoCategoryNotFound is raised.
+        """
+        header = self.__request_header()
         params = {"part": "snippet", "id": category}
 
         try:
-            self.router.request("GET", "categories", header, **params)
-        except Exception as error:  # videoCategoryNotFound
-            print(error)
+            self.router.request("GET", "categories", header, return_json=False, **params)
+        except HTTPError:
             return False
-
         return True
 
-    def upload_video(self, filename, title, description, tags, category):
-        """_summary_
+    # pylint: disable=too-many-arguments
+    def upload_video(
+        self, filename: str, title: str, description: str, category: str, tags: Optional[List[str]] = None
+    ):
+        """Uploads a video to Youtube from the specified file.
 
         See:
-            https://developers.google.com/youtube/v3/guides/uploading_a_video?hl=en
+            https://developers.google.com/youtube/v3/guides/uploading_a_video?hl=en for the upload process.
+            https://developers.google.com/youtube/v3/guides/using_resumable_upload_protocol?hl=en for resumable upload.
+            https://developers.google.com/youtube/v3/docs/videos?hl=en#resource for the video resource.
 
         Args:
-            filename (_type_): _description_
-            title (_type_): _description_
-            description (_type_): _description_
-            tags (_type_): _description_
-            category (_type_): _description_
+            filename (str): the path of the file to upload.
+            title (str): the title of the video.
+            description (str): the description of the video.
+            category (str): the category id of the video as a string.
+            tags (Optional[List[str]], optional): the tags of the video. Defaults to None.
         """
-        # 256 Go
-        # Types MIME de médias acceptés : video/*, application/octet-stream
+        with open(filename, "rb") as file:
+            body = {
+                "snippet": {
+                    "title": title,
+                    "description": description,
+                    "tags": tags or [],
+                    "categoryId": category,
+                    # "thumbnails": {
+                    #     "default": {"url": "https://i.ytimg.com/vi/3jWRrafhO7M/default.jpg", "width": 120, "height": 90}
+                    # },
+                },
+                "status": {
+                    "privacyStatus": PrivacyStatus.PRIVATE.value,
+                    "embeddable": True,
+                    "license": "youtube",
+                },
+            }
 
-        # TODO Resumable Uploads Proto
+            print("body:", body)
+
+            header = self.__request_header()
+            header["Content-Length"] = str(sys.getsizeof(body))  # the number of bytes provided in the request body
+            header["Content-Type"] = "application/json; charset=UTF-8"  # the MIME type of the body of the request
+            header["X-Upload-Content-Length"] = str(os.fstat(file.fileno()).st_size)  # the size of the video in bytes
+            header["X-Upload-Content-Type"] = "video/mp4"  # the MIME type of the video
+
+            print("header", header)
+
+            params = {"part": "snippet,status,contentDetails", "uploadType": "resumable"}
+
+            # TODO add body to request
+
+            response = self.router.request("POST", "resumable_upload", header, body, return_json=False, **params)
+            session_uri: str = response.headers["Location"]
+
+            header["Content-Type"] = header.pop("X-Upload-Content-Type")
+            header["Content-Length"] = header.pop("X-Upload-Content-Length")
+
+            files = {"file": file}
+
+            print(session_uri)
+            exit(0)
+
+            # response = self.router.request("PUT", session_uri, header, files=files, **body)
+
+        print(header, params, body)
+
+        exit(0)
+
+        # TO do resumable upload
         # https://developers.google.com/youtube/v3/guides/using_resumable_upload_protocol?hl=fr
-        header = self.__request_header()
-
-        body = {
-            "snippet": {"title": title, "description": description, "tags": tags, "categoryId": category},
-            "status": {"privacyStatus": PrivacyStatus.PRIVATE.value},
-        }
-        files = None
-        values = {"DB": "photcat", "OUT": "csv", "SHORT": "short"}
-        with open("file.txt", "rb") as file:
-            files = {"upload_file": file}
-
-        # r = requests.post(url, files=files, data=values)
-        # part = snippet,status
-        # notifySubscribers = True

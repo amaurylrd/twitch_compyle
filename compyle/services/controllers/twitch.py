@@ -42,18 +42,18 @@ class TwitchAPI(Routable):
         # generates a new client access token
         self.access_token: str = self.get_new_access_token()
 
-    def __request_header(self, /, client_id: bool = True, acces_token: bool = True, **args) -> Dict[str, str]:
+    def __request_header(self, /, client_id: bool = True, acces_token: bool = True, **kwargs) -> Dict[str, str]:
         """Constructs and returns the request header.
 
         Args:
             client_id (bool, optional): appends the client id if `True`. Defaults to `True`.
-            acces_token (bool, optional): appends the access token if `True`. Defaults to `True`.
-            **args: the additional header attributes.
+            acces_token (bool, optional): appends the access token to the header if `True`. Defaults to `True`.
+            **kwargs: the additional header attributes.
 
         Returns:
             Dict[str, str]: the common request header with the specified attributes.
         """
-        header = {"Accept": "application/vnd.twitchtv.v5+json", **args}
+        header = {"Accept": "application/vnd.twitchtv.v5+json", **kwargs}
 
         if client_id and self.client_id:
             header["Client-ID"] = self.client_id
@@ -67,8 +67,8 @@ class TwitchAPI(Routable):
         """Gets a new client access token from Twitch API following the Client Credentials Grant Flow.
 
         See:
-            https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#getting-oauth-access-tokens
-            https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#client-credentials-grant-flow
+            https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#getting-oauth-access-tokens.
+            https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#client-credentials-grant-flow.
 
         Example:
             >>> self.get_new_access_token()
@@ -86,7 +86,7 @@ class TwitchAPI(Routable):
         """Checks if the specified access token is valid.
 
         See:
-            https://dev.twitch.tv/docs/authentication/validate-tokens
+            https://dev.twitch.tv/docs/authentication/validate-tokens for documentation.
 
         Args:
             access_token (str): the client access token.
@@ -104,7 +104,7 @@ class TwitchAPI(Routable):
         """Gets the top viewed categories/games on Twitch.
 
         See:
-            https://dev.twitch.tv/docs/api/reference/#get-top-games
+            https://dev.twitch.tv/docs/api/reference/#get-top-games for documentation.
 
         Example:
             >>> self.get_top_games(limit=1)
@@ -144,7 +144,7 @@ class TwitchAPI(Routable):
         """Gets the information about the game with the specified name.
 
         See:
-            https://dev.twitch.tv/docs/api/reference/#get-games
+            https://dev.twitch.tv/docs/api/reference/#get-games for documentation.
 
         Example:
             >>> game_name = "VALORANT"
@@ -172,7 +172,7 @@ class TwitchAPI(Routable):
         """Returns the top clips for the specified game.
 
         See:
-            https://dev.twitch.tv/docs/api/reference/#get-clips
+            https://dev.twitch.tv/docs/api/reference/#get-clips for documentation.
 
         Args:
             game_id (str): the id of the game.
@@ -283,6 +283,7 @@ class TwitchAPI(Routable):
         Returns:
             str: the URL of the clip.
         """
+        # removes the suffix '-preview-480x272.jpg' from the thumbnail url
         thumbnai_url: str = clip["thumbnail_url"]
         index = thumbnai_url.index("-preview-")
 

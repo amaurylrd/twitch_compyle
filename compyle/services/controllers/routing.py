@@ -1,10 +1,13 @@
+import json
 import logging
 import time
 from abc import ABC
 from collections.abc import Iterable
 from datetime import datetime, timedelta
+from io import BufferedReader
 from typing import Any, Dict, KeysView, List, Optional, Set, Tuple
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+from urllib.request import urlretrieve
 
 import requests
 from rest_framework import status
@@ -146,9 +149,11 @@ class Endpoint:
         # normalizes the query by removing the null parameters
         noramlized = {k: query[k] for k in self.required_params | self.optional_params if k in query and query[k]}
 
+        # checks if all required parameters are present
         if len(noramlized) < len(self.required_params):
             raise ValueError(f"Missing at least one required non-null parameter in {self.required_params}")
 
+        # checks if all required parameters are present
         if any(param not in noramlized for param in self.required_params):
             raise ValueError(f"Missing required non-null parameters in {self.required_params.difference(noramlized)}")
 
@@ -218,6 +223,14 @@ class Method(Enum):
         """
         return self.func.__repr__()
 
+    def __str__(self) -> str:
+        """Returns the string representation of the enum.
+
+        Returns:
+            str: the string representation of the enum.
+        """
+        return self.func.__str__()
+
 
 class Router:
     """This class represents a router for an API."""
@@ -230,7 +243,7 @@ class Router:
         """
         self.__routes: Dict[str, Endpoint] = {}
         self.__trailing_slash: bool = trailing_slash
-        self.__status_page: str = None
+        self.__status_page: Optional[str] = None
 
     def __str__(self) -> str:
         """Returns a string representation of the router.
@@ -256,9 +269,11 @@ class Router:
             ValueError: if the specified namespace is empty or mistyped.
             ValueError: if the specified endpoint is null or mistyped.
         """
+        # checks if the namespace is a non-empty string
         if not isinstance(namespace, str) or not namespace.strip():
             raise ValueError("The specified namespace is malformed")
 
+        # checks if the endpoint is from the Endpoint class
         if not isinstance(endpoint, Endpoint):
             raise ValueError("The specified endpoint is malformed")
 
@@ -299,27 +314,35 @@ class Router:
         Returns:
             str: the resulting url.
         """
+        # checks if the namespace is registered
         if namespace not in self.__routes:
             raise ValueError("The specified route is not registered")
 
         endpoint: Endpoint = self.__routes[namespace]
         url: str = endpoint.build_url(**query)
 
+        # adds a trailing slash if the option is specified and the url does not already end with a slash
         if self.__trailing_slash and url[-1] != "/":
             return url + "/"
 
+        # removes the trailing slash if the option is specified and the url ends with a slash
         if not self.__trailing_slash and url[-1] == "/":
             return url[:-1]
 
         return url
 
-    def __execute_request(self, method: str, url: str, header: Dict[str, str]) -> requests.Response:
+    # pylint: disable=too-many-arguments
+    def __execute_request(
+        self, method: str, url: str, header: Dict[str, str], body: str, files: Dict[str, BufferedReader]
+    ) -> requests.Response:
         """Executes the specified HTTP request.
 
         Args:
             method (str): the HTTP method to be used.
             url (str): the url to be used for the HTTP request.
             header (Dict[str, str]): the header to be normalized and used for the HTTP request.
+            body (str): the body to be used for the HTTP request.
+            files (Dict[str, BufferedReader]): the files to be used for the HTTP request.
 
         Raises:
             ValueError: if the specified method in not a valid HTTP method.
@@ -328,13 +351,21 @@ class Router:
         Returns:
             requests.Response: the response of the HTTP request.
         """
+        # checks if the method is a valid HTTP method within the enum Method
         if method not in Method.__members__:
             raise ValueError(f"Invalid method {method}, expected one of {Method.__keys__}")
 
+        # normalizes the header by converting all keys to uppercase
+        header = {k.upper(): header[k] for k in header}
+
+        # requests the specified url with the specified header, body and files
+        if method in (Method.GET.name, Method.HEAD.name):
+            response: requests.Response = Method[method](url, headers=header, timeout=None)
+        else:
+            response: requests.Response = Method[method](url, headers=header, data=body, files=files, timeout=None)
+
+        # raises an error if the request failed and logs the response
         try:
-            response: requests.Response = Method[method](
-                url, headers={k.upper(): v for k, v in header.items()}, timeout=None
-            )
             response.raise_for_status()
             return response
         except requests.exceptions.HTTPError as error:
@@ -366,26 +397,33 @@ class Router:
         except requests.exceptions.JSONDecodeError as error:
             raise error
 
-    def request(
-        self, method: str, namespace: str, header: Dict[str, str] = None, *, return_json: bool = True, **params
+    # pylint: disable=too-many-arguments
+    def __request_with_retry(
+        self,
+        method: str,
+        url: str,
+        header: Dict[str, str],
+        body: str,
+        files: Dict[str, BufferedReader],
+        return_json: bool = True,
     ) -> Any:
-        """Requests the specified url with the specified HTTP method and query parameters.
+        """Requests the specified url with the specified HTTP method and query parameters with retries and backoff.
 
         Args:
             method (str): the HTTP method to be used.
-            namespace (str): the namespace to be fetched.
-            header (Dict[str, str]): the header to be used for the HTTP request. Defaults to `None`.
-            return_json (bool): if the response is decoded to JSON. Defaults to `True`.
-            **paramas: the parameters of the query.
+            url (str): the url to be used for the HTTP request.
+            header (Dict[str, str]): the header to be used for the HTTP request.
+            body (str): the body to be used for the HTTP request.
+            files (Dict[str, BufferedReader]): the files to be used for the HTTP request.
+            return_json (bool, optional): flag to tell if if the response is decoded to JSON. Defaults to `True`.
 
         Returns:
             Any: the response or the JSON-encoded content if the option is specified.
         """
-        url: str = self.route(namespace, **params)
-        response: requests.Response = self.__execute_request(method, url, header or {})
+        response: requests.Response = self.__execute_request(method, url, header, body, files)
 
         backoff: float = 0.5  # in seconds
-        max_retries: int = 3
+        max_retries: int = 3  # maximum number of retries
 
         while response.status_code >= 500 and max_retries > 0:
             LOGGER.debug("The request failed number of retries left: %s", max_retries)
@@ -408,12 +446,42 @@ class Router:
                 )
             else:
                 time.sleep(backoff)
-                response = self.__execute_request(method, url, header)
+                response = self.__execute_request(method, url, header, body, files)
 
                 backoff *= 2
                 max_retries -= 1
 
         return self.__noramlized_response(response, return_json)
+
+    # pylint: disable=line-too-long, too-many-arguments
+    def request(
+        self,
+        method: str,
+        namespace: str,
+        header: Optional[Dict[str, str]] = None,
+        body: Optional[Dict[str, Any]] = None,
+        files: Optional[Dict[str, BufferedReader]] = None,
+        *,
+        return_json: bool = True,
+        **params,
+    ) -> Any:
+        """Requests the specified url with the specified HTTP method and query parameters.
+
+        Args:
+            method (str): the HTTP method to be used.
+            namespace (str): the namespace to be fetched.
+            header (Optional[Dict[str, str]], optional): the header to be used for the HTTP request. Defaults to `None`.
+            body (Optional[Dict[str, Any]], optional): the body to be used for the HTTP request. Defaults to `None`.
+            files (Optional[Dict[str, BufferedReader]], optional): the files to be used for the HTTP request. Defaults to `None`.
+            return_json (bool, optional): flag to tell if the response is decoded to JSON. Defaults to `True`.
+            **params: the additional parameters to be used for the HTTP request.
+
+        Returns:
+            Any: the response or the JSON-encoded content if the option is specified.
+        """
+        return self.__request_with_retry(
+            method, self.route(namespace, **params), header or {}, json.dumps(body), files or {}, return_json
+        )
 
     @property
     def status_page(self) -> Optional[str]:
@@ -465,3 +533,15 @@ class Routable(ABC):
             Router: the router for this instance.
         """
         return self.__router
+
+
+def get_url_content(url: str) -> str:
+    """Retrieves the specified url and returns its content into a temporary file on disk.
+
+    Args:
+        url (str): the url to be retrieved.
+
+    Returns:
+        str: the path to the newly created data file.
+    """
+    return urlretrieve(url)[0]  # nosec

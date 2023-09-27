@@ -2,9 +2,9 @@ import logging
 from collections import OrderedDict
 from datetime import datetime
 from functools import wraps
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from pymongo import MongoClient
+from pymongo import ASCENDING, MongoClient
 from pymongo.collection import Collection
 from pymongo.database import Database
 from pymongo.results import (
@@ -65,7 +65,9 @@ class MongoDB(metaclass=Singleton):
         self.client = MongoClient(
             MONGO_CONFIG.client_uri, serverSelectionTimeoutMS=timeout, server_api=ServerApi(version, strict=True)
         )
-        LOGGER.debug("Connection information [host=%s, port=%s]", self.client.HOST, self.client.PORT)
+        LOGGER.debug(
+            "Connection information [host=%s, port=%s, version=%s]", self.client.HOST, self.client.PORT, version
+        )
 
         self.database: Database = self.client[MONGO_CONFIG.client_name]
         LOGGER.info("Connected to MongoDB database '%s'", self.database.name)
@@ -193,74 +195,72 @@ class MongoDB(metaclass=Singleton):
         """
         return self.database[collection].find_one({"_id": query["_id"]})
 
-    # pylint: disable=line-too-long
     # @log_before_after
     def get_documents(
         self,
         collection: str,
-        query: dict = {},
-        projection=None,
-        limit=0,
-        offset=0,
-        sort={},
-        batch_size=100,
-        group_field=None,
-    ) -> list:
-        """Queries documents from the specified collection with the specified filter parameters.
+        pipeline: List[Dict[str, Any]],
+    ) -> List[Any]:
+        """Retrieves the documents from the specified collection.
 
         Args:
             collection (str): the name of the collection.
-            query (dict): the query to filter the documents. If not present, fetch all the data. Defaults to None.
-            projection (Dict[str, str], optional): fields be to to excluded from the result. Defaults to None.
-            limit (int, optional): the maximum number of results to return. Defaults to 0 (no limit).
-            offset (int, optional): the number of documents to omit (from the start of the result set).
-            sort (Dict[str, int], optional): the list of (key, direction) pairs specifying the sort order. Defaults to None.
-            batch_size (int, optional): the number of documents to return in each batch. Defaults to 100.
+            pipeline (List[Dict[str, Any]]): the MongoDB query pipeline.
 
         Returns:
-            list: _description_
+            List[Any]: the list of documents.
         """
-        # query example = {"name": "John", "age": {"$gt": 18}}
-        # projection example = {"_id": False}
-        # LOGGER.debug(
-        #     "get_documents [db=%s, collection=%s, query=%s, projection=%s]",
-        #     self.database.name,
-        #     collection,
-        #     query,
-        #     projection,
-        # )
+        return list(self.database[collection].aggregate(pipeline, allowDiskUse=True))
 
-        # if no query, get all documents
+    # pylint: disable=too-many-arguments, line-too-long
+    @classmethod
+    def build_pipeline(
+        cls,
+        match: Dict[str, Any],
+        *args,
+        project: Optional[Dict[str, Any]] = None,
+        group: Optional[Dict[str, Any]] = None,
+        sort: Optional[Union[str, List[Tuple[str, int]]]] = None,
+        offset: int = 0,
+        limit: int = 0,
+        unwind: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """Builds a MongoDB query pipeline.
 
-        # self.database[collection].distinct("_id", query)
-        # cursor = self.database[collection].find(
-        #     filter=query, projection=projection, skip=offset, limit=limit, sort=sorts_list, batch_size=batch_size
-        # )
+        See:
+            https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline/
 
-        group_field = "id"
-        sort = {"view_count": -1, "created_at": -1}
-        # "$project": {"data": 1}}
+        Args:
+            match (Dict[str, Any]): Filters the documents to pass only the documents that match the specified condition.
+            *args: additional arguments to add to the pipeline, see https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/feature-support-42.
+            project (Optional[Dict[str, Any]], optional): transforms the documents to a new form by adding, removing, or updating fields. Defaults to None.
+            group (Optional[Dict[str, Any]], optional): groups documents by one or more fields and performs various aggregate functions on the grouped data.. Defaults to None.
+            sort (Optional[Union[str, List[Tuple[str, int]]]], optional): sorts the documents based on the specified fields.. Defaults to None.
+            offset (int, optional): skips the specified number of documents. Defaults to None.
+            limit (int, optional): limits the number of documents passed to the next stage. Defaults to 0.
+            unwind (Optional[str], optional): deconstructs an array field from the input documents to output a document for each element. Defaults to None.
 
-        group = {"data": {"$push": "$$ROOT"}}
-        if group_field:
-            group["_id"] = f"${group_field}"
+        Returns:
+            _Pipeline: the MongoDB query pipeline.
+        """
+        pipeline: Dict[str, Any] = {"$match": match, "$skip": offset}
 
-        pipeline = [
-            {"$match": query},
-            {"$sort": sort},
-            {"$skip": offset},
-            {"$limit": limit},
-            {"$group": group},
-            {"$project": {"data": {"$arrayElemAt": ["$data", 0]}}},
-            {"$replaceRoot": {"newRoot": "$data"}},
-        ]
+        if limit > 0:
+            pipeline["$limit"] = limit
 
-        cursor = self.database[collection].aggregate(pipeline, allowDiskUse=True)
+        if sort:
+            if isinstance(sort, str):
+                pipeline["$sort"] = {sort: ASCENDING}
+            else:
+                pipeline["$sort"] = OrderedDict(sort)
 
-        return list(cursor)
+        if group:
+            pipeline["$group"] = group
 
-    # self.client.create_database("compyle")
+        if project:
+            pipeline["$project"] = project
 
-    # collection: Collection = database.create_collection("clips")
-    # test = {"test": "test"}
-    # collection.insert_many([test])
+        if unwind:
+            pipeline["$unwind"] = unwind
+
+        return [{k: v} for k, v in pipeline.items()] + list(args)

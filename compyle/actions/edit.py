@@ -2,25 +2,13 @@
 
 import logging
 import os
-import random
-from http.client import HTTPMessage
-from typing import (
-    Any,
-    Dict,
-    Iterable,
-    List,
-    MutableMapping,
-    Optional,
-    Set,
-    Tuple,
-    TypeAlias,
-    Union,
-)
-from compyle.settings import DEBUG
-from urllib.request import Request, urlcleanup, urlopen, urlretrieve
+from math import ceil
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, TypeAlias, Union
+from urllib.request import urlcleanup
 
 import cv2
 import numpy as np
+from bson import ObjectId
 from moviepy.audio.fx.audio_normalize import audio_normalize
 from moviepy.editor import (
     CompositeVideoClip,
@@ -31,7 +19,9 @@ from moviepy.editor import (
 from moviepy.video.compositing.transitions import crossfadein, crossfadeout, slide_in
 from moviepy.video.fx.resize import resize
 
+from compyle.services.controllers.routing import get_url_content
 from compyle.services.databases.mongo import MongoDB
+from compyle.settings import DEBUG
 from compyle.utils.decorators import call_before_after
 
 LOGGER = logging.getLogger(__name__)
@@ -39,6 +29,7 @@ logging.getLogger("PIL.PngImagePlugin").setLevel(logging.ERROR)
 logging.getLogger("PIL.Image").setLevel(logging.ERROR)
 logging.getLogger("imageio_ffmpeg").setLevel(logging.ERROR)
 
+vec3: TypeAlias = Tuple[int, int, int]
 vec4: TypeAlias = Tuple[int, int, int, int]
 
 
@@ -58,53 +49,38 @@ def get_latest_file(path: os.PathLike) -> Optional[str]:
     return None
 
 
-# pylint: disable=line-too-long
-def url_retrieve(
-    url: str, data: Optional[Iterable[bytes]] = None, headers: MutableMapping[str, str] = None, size: int = -1
-) -> tuple[str, HTTPMessage]:
-    """Retrieves the specified url and returns the content.
-
-    Args:
-        url (str): the url to be retrieved.
-        data (Iterable[bytes], optional): the data to be sent. Defaults to None.
-        headers (MutableMapping[str, str], optional): the headers to be sent. Defaults to None.
-        size (int, optional): the number of characters to read from the url. Defaults to -1. If negative or omitted, read until EOF.
-
-    Returns:
-        bytes: the content of the page.
-    """
-    return urlretrieve(url)  # nosec
-    # with urlopen(Request(url, data=data, headers=headers)) as response:  # nosec
-    #     return response.read(size)
-
-
 cascade: str = "./opencv/haarcascades/frontalface.xml"
 classifier: cv2.CascadeClassifier = cv2.CascadeClassifier(cascade)
 
 
-def get_faces(image: cv2.Mat) -> List[vec4]:
-    """Returns the faces detected in the specified image.
+def get_faces(image: cv2.Mat, *, scale: float = 0.5) -> List[vec4]:
+    """Returns the faces detected in the specified image using the Haar cascade classifier.
 
     Args:
         image (cv2.Mat): the image to process.
+        scale (float, optional): the scale factor to apply. Defaults to 0.5 (half the size of the image).
 
     Returns:
         List[Tuple[int, int, int, int]]: the faces detected in the specified image.
     """
-    image: cv2.Mat = cv2.resize(image, (0, 0), fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
+    # reduces the image size by 2 to improve the detection
+    image: cv2.Mat = cv2.resize(image, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
 
+    # converts the image to grayscale and equalizes its histogram
     grayscale: cv2.Mat = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     grayscale: cv2.Mat = cv2.equalizeHist(grayscale)
 
     # TODO timer pour le temps de détection
-    return classifier.detectMultiScale(
+    # TODO mettre une minsize en forme de visage et plus grande que 30
+    faces = classifier.detectMultiScale(
         grayscale,
         scaleFactor=1.3,
         minNeighbors=6,
         minSize=(30, 30),
         flags=cv2.CASCADE_SCALE_IMAGE,
     )
-    # TODO mettre une minsize en forme de visage et plus grande que 30
+
+    return [[int(coord / scale) for coord in face] for face in faces]
 
 
 def find_crop(image: cv2.Mat, face: vec4, *, scale: float = 1, ratio: float = 16 / 9) -> vec4:
@@ -166,16 +142,42 @@ def get_thumbnail(
     subimages: Dict[str, Tuple[vec4, cv2.Mat]],
     default: Dict[str, str],
     border_color: Tuple[int, int, int] = (114, 181, 209),
-    border_size: int = 20,
+    border_size: int = 30,
     scale: float = 1.5,
 ):
     if not subimages:
-        return cv2.imread(url_retrieve(default["thumbnail_url"])[0])
+        return cv2.imread(get_url_content(default["thumbnail_url"]))
+        # TODO resize 480x272 to 1920x1080
 
     # TODO get_gradiant
 
     # fills the thumbnail with black pixels in column-major order
-    thumbnail = np.full((1080, 1920, len(border_color)), border_color, np.uint8)
+    # thumbnail = np.full((1080, 1920, len(border_color)), border_color, np.uint8)
+    thumbnail = np.zeros((1080, 1920, 3), np.uint8)
+
+    def paint_gradient(thumbnail: cv2.Mat, primary: vec3, secondary: vec3, tertiary: vec3 = None):
+        y = np.linspace(0, 1, thumbnail.shape[0])
+        x = np.linspace(0, 1, thumbnail.shape[1])
+        xv, yv = np.meshgrid(x, y)
+
+        zz = np.sqrt(xv**2 + yv**2)
+
+        # if (zz > 1).any():
+        #     zz = zz / zz.max()
+
+        # thumbnail[:, :, 0] = (zz * 255).astype(np.uint8)
+        # 2
+        d = np.minimum(0.01, np.minimum(np.minimum(xv, yv), np.minimum(1 - xv, 1 - yv)))
+        d = d / d.max()
+
+        thumbnail[:, :] = primary * d[:, :, None] + secondary * (1 - d[:, :, None])
+        # thumbnail[:, :, 0] = (np.sin(xv * 2 * np.pi) * 127 + 128).astype(np.uint8)
+        # thumbnail[:, :, 1] = (np.sin(yv * 2 * np.pi) * 127 + 128).astype(np.uint8)
+        # thumbnail[:, :, 2] = (np.sin((xv + yv) * 2 * np.pi) * 127 + 128).astype(np.uint8)
+
+        return None
+
+    paint_gradient(thumbnail, border_color, (7, 46, 74))
 
     if len(subimages) == 4:
         # gets the quarter of the size of the thumbnail
@@ -275,7 +277,7 @@ def compose_clip(file: str, broadcaster_name: str, **kwargs) -> CompositeVideoCl
 
     textclip = textclip.margin(top=50, bottom=videoclip.h - textclip.h - 50, right=videoclip.w - textclip.w, opacity=0)
 
-    # merge subclip and textclip into a composite clip
+    # merges subclip and textclip into a composite clip
     composite: CompositeVideoClip = CompositeVideoClip([videoclip, textclip]).set_duration(videoclip.duration)
 
     # releases the video, audio and text resources
@@ -361,9 +363,27 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
     if _input is None:
         # loads data from the database
         with MongoDB() as mongo_db:
-            # clips = mongo_db.get_documents("clips")  # todo filter ceux non utilisé pour des clips
+            # todo filter ceux non utilisé pour des clips
             # limit=20, sum(duration) == 10
-            clips = mongo_db.get_documents("clips", limit=20)
+
+            # clips = mongo_db.get_documents("clips", limit=20)
+
+            query = {}
+            sort = {"view_count": -1, "created_at": -1}
+            project = {"data": {"$arrayElemAt": ["$data", 0]}}
+            group = {"data": {"$push": "$$ROOT"}, "_id": "$id"}
+            replaceRoot = {"$replaceRoot": {"newRoot": "$data"}}
+            pipeline = mongo_db.build_pipeline(query, replaceRoot, sort=sort, project=project, group=group)
+            clips = mongo_db.get_documents("clips", pipeline)
+
+            # clips_id = [
+            #     ObjectId("650c8e0251beaf12754f1a90"),
+            #     ObjectId("650c8e0251beaf12754f1a92"),
+            #     ObjectId("650c8e0251beaf12754f1a93"),
+            #     ObjectId("650c8e0251beaf12754f1a97"),
+            # ]
+            # pipeline = mongo_db.build_pipeline(match={"_id": {"$in": clips_id}})
+            # clips = mongo_db.get_documents("clips", pipeline)
 
             # top 20
             # most viewed
@@ -401,10 +421,9 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
 
     for clip in clips:
         # retrieves clip url and downloads clip file
-        temporary_file: str = url_retrieve(clip["clip_url"])[0]
+        temporary_file: str = get_url_content(clip["clip_url"])
         broadcaster_name: str = clip["broadcaster_name"]
-
-        print(broadcaster_name, clip["_id"])  # todo transformer en log
+        LOGGER.debug("edit clip %s from %s", clip["_id"], broadcaster_name)
 
         # TODO timer pour le file download
         composite = compose_clip(temporary_file, broadcaster_name, duration=clip["duration"], width=1920, height=1080)
@@ -425,27 +444,29 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
         credit = f"{broadcaster_name} - {clip['broadcaster_url']}"
         _credits.add(credit)
 
+        # checks if the broadcaster has already been added to the subimages
         if len(subimages) < 4 and broadcaster_name not in subimages:
-            image = cv2.imread(url_retrieve(clip["thumbnail_url"])[0])
-            faces = get_faces(image)
-
+            # if no face has been detected, tries to find one in every 10% of the clip
+            faces = []
             i = 0
-            step = int(round(composite.duration / 10))
+            step = int(ceil(composite.duration / 10))
             while len(faces) < 1 and i < composite.duration:
                 image = composite.get_frame(i)
                 faces = get_faces(image)
                 i += step
 
+            # checks if a face has been detected
             if len(faces) > 0:
-                subimages[broadcaster_name] = (
-                    [coord * 2 for coord in faces[0]],
-                    cv2.cvtColor(image, cv2.COLOR_BGR2RGB),
-                )
+                subimages[broadcaster_name] = (faces[0], cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+                LOGGER.debug("face found in the %dth frame of the clip", i)
+            else:
+                LOGGER.debug("no face found in the clip")
+        else:
+            LOGGER.debug("face detection skipped to avoid repeating the same broadcaster face")
 
     if subclips:
-        # prompte video title
-        #
-        #
+        print(subimages.keys())
+        # prompt video title
         title = clips[0]["title"]
         # from transformers import AutoModelForSequenceClassification
 
@@ -500,28 +521,24 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
         description = "🎥 Credits:\n" + "\n".join(list(_credits)[::-1]) + "\n\n⌚ Timestamps:\n" + timestamps
         local_file = r"clips.mp4"
 
-        print(local_file)
-        print(description)
-        if os.path.exists(local_file):
-            os.remove(local_file)
-
-        video: CompositeVideoClip = concatenate_videoclips(subclips, method="compose", padding=-1)
-        threads = os.cpu_count()
-        fps, preset = (15, "ultrafast") if DEBUG else (video.fps, "placebo")
-        # video.write_videofile(local_file, codec="libx264", audio_codec="aac", fps=fps, preset=preset, threads=threads)
-        video.close()
+        # write_video(subclips, local_file)
 
     print("edit", _input, output)
     # TODO laoder
 
-    # for clip in clips[2:4]:
-    #     # 1. retrieve clip url and download clip file
-    #     url = api.get_clip_url(clip)
-    #     temporary_file = url_retrieve(url)[0]
 
-    #     # 2. videoclip creation and normalization
-    #     videoclip: VideoFileClip = VideoFileClip(temporary_file)
-    #     videoclip = videoclip.subclip(0, clip["duration"])
-    #     videoclip = videoclip.set_fps(60)
-    #     videoclip = videoclip.fx(resize, width=1920, height=1080)
-    #     videoclip = audio_normalize(videoclip)
+def write_video(subclips: List[CompositeVideoClip], filename: str = r"clips.mp4"):
+    # if the file already exists, deletes it
+    if os.path.exists(filename):
+        os.remove(filename)
+
+    # returns the total number of CPU or None if undetermined
+    threads: Optional[int] = os.cpu_count()
+
+    # sets the FPS and codec preset according to the debug mode
+    fps, preset = (15, "ultrafast") if DEBUG else (None, "placebo")
+
+    # merges the subclips into a single videofile
+    video: CompositeVideoClip = concatenate_videoclips(subclips, method="compose", padding=-1)
+    video.write_videofile(filename, codec="libx264", audio_codec="aac", fps=fps, preset=preset, threads=threads)
+    video.close()
