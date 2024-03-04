@@ -39,7 +39,7 @@ def get_latest_file(path: os.PathLike) -> Optional[str]:
         path (os.PathLike): the path to the directory.
 
     Returns:
-        Optional[str]: the path to the most recent file if any, otherwise `None`.
+        Optional[str]: the path to the most recent file if any, otherwise None.
     """
     # checks if the specified path is an existing directory
     if path and os.path.isdir(path):

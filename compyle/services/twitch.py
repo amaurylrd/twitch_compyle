@@ -1,14 +1,11 @@
 import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from requests import HTTPError
 
 from compyle.services.common import Routable
 from compyle.settings import TWITCH_CONFIG
-from compyle.utils.descriptors import deserialize
 from compyle.utils.types import Singleton
-
-APP_ROUTES: str = "compyle/services/controllers/routes/twitch.json"
 
 
 class TwitchAPI(Routable):
@@ -22,18 +19,18 @@ class TwitchAPI(Routable):
 
     __metaclass__ = Singleton
 
-    def __init__(self, client_id: Optional[str] = None, client_secret: Optional[str] = None):
+    def __init__(self, client_id: str | None = None, client_secret: str | None = None):
         """Initializes a new instance of the Twitch API client.
 
         Params:
-            client_id (Optional[str]): The client id of the Twitch application. Defaults to None.
-            client_secret (Optional[str]): The client secret of the Twitch application. Defaults to None.
+            client_id (str, optional): The client id of the Twitch application. Defaults to None.
+            client_secret (str, optional): The client secret of the Twitch application. Defaults to None.
         """
         super().__init__()
 
         # retrieves the client id and secret either from the signature parameters or from the environment variables
-        self.client_id: Optional[str] = client_id or TWITCH_CONFIG.client_id
-        self.client_secret: Optional[str] = client_secret or TWITCH_CONFIG.client_secret
+        self.client_id: str | None = client_id or TWITCH_CONFIG.client_id
+        self.client_secret: str | None = client_secret or TWITCH_CONFIG.client_secret
 
         # checks if the client id and secret are specified
         if not self.client_id or not self.client_secret:
@@ -42,16 +39,16 @@ class TwitchAPI(Routable):
         # generates a new client access token
         self.access_token: str = self.get_new_access_token()
 
-    def __request_header(self, /, client_id: bool = True, acces_token: bool = True, **kwargs) -> Dict[str, str]:
+    def __request_header(self, /, client_id: bool = True, acces_token: bool = True, **kwargs) -> dict[str, str]:
         """Constructs and returns the request header.
 
         Args:
-            client_id (bool, optional): appends the client id if `True`. Defaults to `True`.
-            acces_token (bool, optional): appends the access token to the header if `True`. Defaults to `True`.
+            client_id (bool, optional): appends the client id if True. Defaults to True.
+            acces_token (bool, optional): appends the access token to the header if True. Defaults to True.
             **kwargs: the additional header attributes.
 
         Returns:
-            Dict[str, str]: the common request header with the specified attributes.
+            dict[str, str]: the common request header with the specified attributes.
         """
         header = {"Accept": "application/vnd.twitchtv.v5+json", **kwargs}
 
@@ -92,7 +89,7 @@ class TwitchAPI(Routable):
             access_token (str): the client access token.
 
         Returns:
-            bool: `True` if the token is valid, `False` otherwise.
+            bool: True if the token is valid, False otherwise.
         """
         try:
             self.router.request("GET", "validate", {"Authorization": f"OAuth {access_token}"})
@@ -168,7 +165,7 @@ class TwitchAPI(Routable):
 
         return result
 
-    def get_game_clips(self, game_id: str, *, limit=100, period=3) -> List[Any]:
+    def get_game_clips(self, game_id: str, *, limit=100, period=3) -> list[Any]:
         """Returns the top clips for the specified game.
 
         See:
@@ -180,7 +177,7 @@ class TwitchAPI(Routable):
             period (int, optional): the date delta in days. Defaults to 3 days.
 
         Returns:
-            List[Any]: the list of clips if the response was a success.
+            list[Any]: the list of clips if the response was a success.
         """
         # date format is RFC3339 like yyyy-MM-ddTHH:mm:ssZ
         started_at = datetime.datetime.utcnow() - datetime.timedelta(days=max(1, period))
@@ -194,16 +191,16 @@ class TwitchAPI(Routable):
 
         return self.__parse_clips(header, params)
 
-    def __parse_clips(self, header: Dict[str, str], params: Dict[str, Any], *, pages: int = 10) -> List[Any]:
+    def __parse_clips(self, header: dict[str, str], params: dict[str, Any], *, pages: int = 10) -> list[Any]:
         """Collects and normalizes the clips from the paginated request.
 
         Args:
-            header (Dict[str, str]): the request header.
-            params (Dict[str, Any]): the request parameters.
+            header (dict[str, str]): the request header.
+            params (dict[str, Any]): the request parameters.
             pages (int, optional): the maximum number of pages to request.
 
         Returns:
-            List[Any]: the list of clips.
+            list[Any]: the list of clips.
         """
         # TODO put in signature, in **kwargs or .env ?
         min_views = 50  # the minimum number view count for a clip

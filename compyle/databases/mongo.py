@@ -191,7 +191,7 @@ class MongoDB(metaclass=Singleton):
             query (Dict[str, Any]): the filter query to retrieve the document.
 
         Returns:
-            Optional[Any]: the document if any, otherwise `None`.
+            Optional[Any]: the document if any, otherwise None.
         """
         return self.database[collection].find_one({"_id": query["_id"]})
 

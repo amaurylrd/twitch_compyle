@@ -1,5 +1,4 @@
-from compyle.services.controllers.common import Method
-from compyle.services.controllers.youtube import YoutubeAPI
+from compyle.services.youtube import YoutubeAPI
 
 youtube = YoutubeAPI()
 # cat = youtube.get_categories()

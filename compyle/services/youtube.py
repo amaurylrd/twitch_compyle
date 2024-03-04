@@ -1,18 +1,15 @@
 import os
 import sys
 import webbrowser
+from enum import Enum
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Dict, List, Optional, Tuple
 from urllib.parse import parse_qs, urlparse
 
 from requests import HTTPError
 
 from compyle.services.common import Routable
 from compyle.settings import YOUTUBE_CONFIG
-from compyle.utils.descriptors import deserialize
-from compyle.utils.types import Enum, Singleton
-
-APP_ROUTES: str = "compyle/services/controllers/routes/youtube.json"
+from compyle.utils.types import Singleton
 
 
 class PrivacyStatus(Enum):
@@ -44,22 +41,19 @@ class YoutubeAPI(Routable):
 
     __metaclass__ = Singleton
 
-    def __init__(
-        self, client_id: Optional[str] = None, client_secret: Optional[str] = None, redirect_uri: Optional[str] = None
-    ):
+    def __init__(self, client_id: str | None = None, client_secret: str | None = None, redirect_uri: str | None = None):
         """Initializes a new instance of the Youtube API client.
 
         Params:
-            client_id (Optional[str]): The client id of the Youtube application. Defaults to None.
-            client_secret (Optional[str]): The client secret of the Youtube application. Defaults to None.
-            redirect_uri (Optional[str]): The redirect uri of the Youtube application. Defaults to None.
+            client_id ( str | None): The client id of the Youtube application. Defaults to None.
+            client_secret ( str | None): The client secret of the Youtube application. Defaults to None.
+            redirect_uri ( str | None): The redirect uri of the Youtube application. Defaults to None.
         """
-        # retrieves the routes description from the JSON file
-        super().__init__(deserialize(APP_ROUTES))
+        super().__init__()
 
         # retrieves the client id and secret either from the parameters or the environment variables
-        self.client_id: Optional[str] = client_id or YOUTUBE_CONFIG.client_id
-        self.client_secret: Optional[str] = client_secret or YOUTUBE_CONFIG.client_secret
+        self.client_id: str | None = client_id or YOUTUBE_CONFIG.client_id
+        self.client_secret: str | None = client_secret or YOUTUBE_CONFIG.client_secret
 
         # checks if the client id and secret are specified
         if not self.client_id or not self.client_secret:
@@ -67,16 +61,16 @@ class YoutubeAPI(Routable):
 
         # retrieves the redirect uri and client email either from the parameters or from the environment variables
         self.redirect_uri: str = redirect_uri or YOUTUBE_CONFIG.redirect_uri
-        user_email_address: Optional[str] = YOUTUBE_CONFIG.client_email
+        user_email_address: str | None = YOUTUBE_CONFIG.client_email
 
         # retrieves the authorization code from authentication service
-        autorization_code: str = self.authentificate(user_email_address)
+        authorization_code: str = self.authentificate(user_email_address)
         # TODO réparer ici
         code = input("Enter the authorization code: ")
         self.access_token = self.get_access_token(code)
 
     # pylint: disable=line-too-long
-    def authentificate(self, login_hint: Optional[str] = None) -> str:
+    def authentificate(self, login_hint: str | None = None) -> str:
         """Redirect the user to Google's OAuth 2.0 server to initiate the authentication and authorization process.
         Google's OAuth 2.0 server authenticates the user and obtains consent from the user for your application to access the requested scopes.
         The response is sent back to your application using the redirect URL you specified.
@@ -87,7 +81,7 @@ class YoutubeAPI(Routable):
             https://developers.google.com/identity/protocols/oauth2/scopes#youtube for scopes.
 
         Params:
-            login_hint (Optional[str]): the email address of the user to log in. Defaults to None.
+            login_hint ( str | None): the email address of the user to log in. Defaults to None.
 
         Returns:
             str: the authorization code
@@ -184,15 +178,15 @@ class YoutubeAPI(Routable):
 
         return self.router.request("POST", "token", header, **params)["access_token"]
 
-    def __request_header(self, /, acces_token: bool = True, **kwargs) -> Dict[str, str]:
+    def __request_header(self, /, acces_token: bool = True, **kwargs) -> dict[str, str]:
         """Constructs and returns the request header.
 
         Args:
-            acces_token (bool, optional): appends the access token to the header if `True`. Defaults to `True`.
+            acces_token (bool, optional): appends the access token to the header if True. Defaults to True.
             **kwargs: the additional header attributes.
 
         Returns:
-            Dict[str, str]: the common request header with the specified attributes.
+            dict[str, str]: the common request header with the specified attributes.
         """
         header = {"Content-Type": "application/json; charset=UTF-8", "Accept": "application/json", **kwargs}
 
@@ -201,7 +195,7 @@ class YoutubeAPI(Routable):
 
         return header
 
-    def get_categories(self, region_code: str = "FR") -> List[Tuple[str, int]]:
+    def get_categories(self, region_code: str = "FR") -> list[tuple[str, int]]:
         """Retrieves the list of categories in the region specified by the region_code in the format ISO 3166-1 alpha-2.
 
         Example:
@@ -212,7 +206,7 @@ class YoutubeAPI(Routable):
             region_code (str, optional): the code of the region. Defaults to "FR".
 
         Returns:
-            List[Tuple[str, int]]: the list of assignable categories in the specified region.
+            list[tuple[str, int]]: the list of assignable categories in the specified region.
         """
         header = self.__request_header()
         params = {"part": "snippet", "regionCode": region_code}
@@ -240,9 +234,7 @@ class YoutubeAPI(Routable):
         return True
 
     # pylint: disable=too-many-arguments
-    def upload_video(
-        self, filename: str, title: str, description: str, category: str, tags: Optional[List[str]] = None
-    ):
+    def upload_video(self, filename: str, title: str, description: str, category: str, tags: list[str] | None = None):
         """Uploads a video to Youtube from the specified file.
 
         See:
@@ -255,7 +247,7 @@ class YoutubeAPI(Routable):
             title (str): the title of the video.
             description (str): the description of the video.
             category (str): the category id of the video as a string.
-            tags (Optional[List[str]], optional): the tags of the video. Defaults to None.
+            tags (list[str], optional): the tags of the video. Defaults to None.
         """
         with open(filename, "rb") as file:
             body = {
@@ -306,7 +298,7 @@ class YoutubeAPI(Routable):
 
         exit(0)
 
-    def test(self, filename: str, title: str, description: str, category: str, tags: Optional[List[str]] = None):
+    def test(self, filename: str, title: str, description: str, category: str, tags: list[str] | None = None):
         with open(filename, "rb") as file:
             header = self.__request_header()
             header["Content-Type"] = "video/mp4"
@@ -328,5 +320,5 @@ class YoutubeAPI(Routable):
             files = {"file": file}
             response = self.router.request("POST", "upload", header, body, files, **params)
             print(response)
-        # TO do resumable upload
+        # TODO resumable upload
         # https://developers.google.com/youtube/v3/guides/using_resumable_upload_protocol?hl=fr

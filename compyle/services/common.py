@@ -2,7 +2,7 @@ import logging
 from abc import ABC
 from enum import IntEnum
 from io import BufferedReader
-from typing import Any, Callable, KeysView, Tuple
+from typing import Any, Callable, KeysView
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 from urllib.request import urlretrieve
 
@@ -70,14 +70,14 @@ class Endpoint:
         return urlunparse(components)
 
     @staticmethod
-    def extract_url_params(url: str) -> list[Tuple[str, str]]:
+    def extract_url_params(url: str) -> list[tuple[str, str]]:
         """Extracts the parameters from the specified url.
 
         Args:
             url (str): the url to extract the parameters from.
 
         Returns:
-            list[Tuple[str, str]]: the list of parameters, as G-d intended.
+            list[tuple[str, str]]: the list of parameters, as G-d intended.
         """
         return parse_qsl(urlparse(url).query, keep_blank_values=True)
 
@@ -190,7 +190,7 @@ class Router:
             namespace (str): the namespace to be tested.
 
         Returns:
-            bool: `True` if namespace is present in the routes, `False` otherwise.
+            bool: True if namespace is present in the routes, False otherwise.
         """
         return namespace in self._routes
 
@@ -243,7 +243,7 @@ class Router:
         retries: int = 3,
         backoff: float = 0.5,
         jitter: float = 0.5,
-        timeout: float | None = 2.0,
+        timeout: float | None = None,
         **request,
     ) -> requests.Response:
         """Requests the specified url with the specified HTTP method and query parameters.
@@ -254,7 +254,7 @@ class Router:
             retries (int, optional): the number of retries. Defaults to 3.
             backoff (float, optional): the backoff factor in seconds. Defaults to 0.5.
             jitter (float, optional): the backoff jitter in seconds. Defaults to 0.5.
-            timeout (float, optional): the request timeout in seconds. Defaults to 1.
+            timeout (float, optional): the request timeout in seconds. Defaults to None.
             **request: the parameters to be used for the HTTP request.
 
         Raises:
@@ -310,10 +310,10 @@ class Router:
         Args:
             method (str): the HTTP method to be used.
             namespace (str): the namespace to be fetched.
-            header (dict[str, str], optional): the header to be used for the HTTP request. Defaults to `None`.
-            body (dict[str, Any], optional): the body to be used for the HTTP request. Defaults to `None`.
-            files (dict[str, BufferedReader], optional): the files to be used for the HTTP request. Defaults to `None`.
-            return_json (bool, optional): flag to tell if the response is decoded to JSON. Defaults to `True`.
+            header (dict[str, str], optional): the header to be used for the HTTP request. Defaults to None.
+            body (dict[str, Any], optional): the body to be used for the HTTP request. Defaults to None.
+            files (dict[str, BufferedReader], optional): the files to be used for the HTTP request. Defaults to None.
+            return_json (bool, optional): flag to tell if the response is decoded to JSON. Defaults to True.
             **params: the additional parameters to be used for the HTTP request.
 
         Raises:
