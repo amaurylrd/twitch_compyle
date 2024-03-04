@@ -6,6 +6,7 @@
 # *     are also available at gnu.org/licenses/license-list.html.                *
 # ********************************************************************************
 
+
 import argparse
 import logging
 import pathlib
@@ -47,7 +48,7 @@ def main():
     subparser: argparse._SubParsersAction = parser.add_subparsers(help="select the action to perform", required=True)
 
     # the parser for the command 'collect'
-    collect.get_parser(subparser)
+    collect.get_parser(subparser) # TODO module action, method collect
 
     # the parser for the command 'edit'
     # TODO faire le get_parser de edit

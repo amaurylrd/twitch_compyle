@@ -8,7 +8,6 @@ from urllib.request import urlcleanup
 
 import cv2
 import numpy as np
-from bson import ObjectId
 from moviepy.audio.fx.audio_normalize import audio_normalize
 from moviepy.editor import (
     CompositeVideoClip,
@@ -19,8 +18,8 @@ from moviepy.editor import (
 from moviepy.video.compositing.transitions import crossfadein, crossfadeout, slide_in
 from moviepy.video.fx.resize import resize
 
-from compyle.services.controllers.routing import get_url_content
-from compyle.services.databases.mongo import MongoDB
+from compyle.databases.mongo import MongoDB
+from compyle.services.common import get_url_content
 from compyle.settings import DEBUG
 from compyle.utils.decorators import call_before_after
 
@@ -521,7 +520,7 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
         description = "🎥 Credits:\n" + "\n".join(list(_credits)[::-1]) + "\n\n⌚ Timestamps:\n" + timestamps
         local_file = r"clips.mp4"
 
-        # write_video(subclips, local_file)
+        write_video(subclips, local_file)
 
     print("edit", _input, output)
     # TODO laoder

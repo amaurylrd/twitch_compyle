@@ -5,8 +5,8 @@ import os
 import pathlib
 from typing import Optional
 
-from compyle.services.controllers.twitch import TwitchAPI
-from compyle.services.databases.mongo import MongoDB
+from compyle.databases.mongo import MongoDB
+from compyle.services.twitch import TwitchAPI
 from compyle.utils.descriptors import serialize
 from main import DEFAULT_REPORT_FOLDER
 
@@ -59,6 +59,7 @@ def collect(*, output: Optional[pathlib.Path] = None, game_name: str = "League o
     """
     # initializes the Twitch API client
     twitch_api = TwitchAPI()
+    game_name = "Trackmania"
 
     # retrieves the clips for the specified game and period
     game_id = twitch_api.get_game_id(game_name)
@@ -69,7 +70,7 @@ def collect(*, output: Optional[pathlib.Path] = None, game_name: str = "League o
         with MongoDB() as mongo_db:
             mongo_db.insert_documents("clips", clips)
     else:
-        output = output.path
+        output = output.__str__()
         # stores the clips data in the filesystem
         if output.endswith("/") or os.path.isdir(output):
             output = os.path.join(output, game_name)

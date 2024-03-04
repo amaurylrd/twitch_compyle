@@ -7,7 +7,7 @@ from urllib.parse import parse_qs, urlparse
 
 from requests import HTTPError
 
-from compyle.services.controllers.routing import Routable
+from compyle.services.common import Routable
 from compyle.settings import YOUTUBE_CONFIG
 from compyle.utils.descriptors import deserialize
 from compyle.utils.types import Enum, Singleton
@@ -121,6 +121,7 @@ class YoutubeAPI(Routable):
         client_address[0] = client_address[0].split("://", maxsplit=1)[1]
         client_address[1] = int(client_address[1]) if len(client_address) > 1 else 80
 
+        # gets user consent and retrieves the authorization code
         server = HTTPServer(tuple(client_address), RequestHandler)
 
         webbrowser.open(response_uri, new=2)
@@ -155,7 +156,11 @@ class YoutubeAPI(Routable):
             "redirect_uri": self.redirect_uri,
         }
 
-        return self.router.request("POST", "token", header, **params)["access_token"]
+        response = self.router.request("POST", "token", header, **params)
+        print("granted scopes:", response["scope"].split(" "))
+        print(response)
+
+        return response["access_token"]
 
     def refresh_access_token(self, refresh_token: str):
         """Refreshes the access token from the refresh token.
@@ -169,7 +174,7 @@ class YoutubeAPI(Routable):
         Returns:
             str: the access token if the request was a success.
         """
-        header = {"Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json"}
+        header = {"Accept": "application/json"}
         params = {
             "client_id": self.client_id,
             "client_secret": self.client_secret,
@@ -189,7 +194,7 @@ class YoutubeAPI(Routable):
         Returns:
             Dict[str, str]: the common request header with the specified attributes.
         """
-        header = {"Accept": "application/json", **kwargs}
+        header = {"Content-Type": "application/json; charset=UTF-8", "Accept": "application/json", **kwargs}
 
         if acces_token and self.access_token:
             header["Authorization"] = f"Bearer {self.access_token}"
@@ -301,5 +306,27 @@ class YoutubeAPI(Routable):
 
         exit(0)
 
+    def test(self, filename: str, title: str, description: str, category: str, tags: Optional[List[str]] = None):
+        with open(filename, "rb") as file:
+            header = self.__request_header()
+            header["Content-Type"] = "video/mp4"
+            header["Content-Length"] = str(os.fstat(file.fileno()).st_size)
+
+            params = {"part": "snippet,status,contentDetails", "notifySubscribers": True}
+            body = {
+                "snippet": {
+                    "title": title,
+                    "description": description,
+                    "tags": tags or [],
+                    "categoryId": category,
+                    "thumbnails": {},
+                },
+                "status": {
+                    "privacyStatus": PrivacyStatus.PRIVATE.value,
+                },
+            }
+            files = {"file": file}
+            response = self.router.request("POST", "upload", header, body, files, **params)
+            print(response)
         # TO do resumable upload
         # https://developers.google.com/youtube/v3/guides/using_resumable_upload_protocol?hl=fr

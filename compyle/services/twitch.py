@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 
 from requests import HTTPError
 
-from compyle.services.controllers.routing import Routable
+from compyle.services.common import Routable
 from compyle.settings import TWITCH_CONFIG
 from compyle.utils.descriptors import deserialize
 from compyle.utils.types import Singleton
@@ -17,6 +17,7 @@ class TwitchAPI(Routable):
     See:
         https://dev.twitch.tv/docs/api/reference for more information.
         https://dev.twitch.tv/docs/api/migration/ for endpoints equivalence.
+        https://devstatus.twitch.tv/ for the Twitch API status.
     """
 
     __metaclass__ = Singleton
@@ -28,8 +29,7 @@ class TwitchAPI(Routable):
             client_id (Optional[str]): The client id of the Twitch application. Defaults to None.
             client_secret (Optional[str]): The client secret of the Twitch application. Defaults to None.
         """
-        # retrieves the routes from the JSON file
-        super().__init__(deserialize(APP_ROUTES))
+        super().__init__()
 
         # retrieves the client id and secret either from the signature parameters or from the environment variables
         self.client_id: Optional[str] = client_id or TWITCH_CONFIG.client_id
@@ -184,14 +184,12 @@ class TwitchAPI(Routable):
         """
         # date format is RFC3339 like yyyy-MM-ddTHH:mm:ssZ
         started_at = datetime.datetime.utcnow() - datetime.timedelta(days=max(1, period))
-        ended_at = datetime.datetime.utcnow()
 
         header = self.__request_header()
         params = {
             "game_id": game_id,
             "first": str(max(1, min(limit, 100))),
             "started_at": started_at.isoformat("T") + "Z",
-            "ended_at": ended_at.isoformat("T") + "Z",
         }
 
         return self.__parse_clips(header, params)

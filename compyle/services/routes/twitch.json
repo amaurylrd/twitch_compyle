@@ -1,5 +1,4 @@
 {
-  "status": "https://devstatus.twitch.tv/",
   "auth": {
     "base_url": "https://id.twitch.tv/oauth2",
     "slug": "/token",
