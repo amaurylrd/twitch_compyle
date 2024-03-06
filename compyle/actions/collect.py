@@ -59,9 +59,9 @@ def collect(*, output: Optional[pathlib.Path] = None, game_name: str = "League o
     """
     # initializes the Twitch API client
     twitch_api = TwitchAPI()
-    game_name = "Trackmania"
 
     # retrieves the clips for the specified game and period
+    game_name = "Minecraft"
     game_id = twitch_api.get_game_id(game_name)
     clips = twitch_api.get_game_clips(game_id, period=period)
 

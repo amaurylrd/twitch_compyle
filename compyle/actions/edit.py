@@ -358,8 +358,8 @@ def rearrange(clips: List[Dict[str, str]], key: str, max_length: int = 15) -> Li
 
 
 @call_before_after(urlcleanup)
-def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
-    if _input is None:
+def edit(*, input: Optional[str] = None, output: Optional[str] = None):
+    if input is None:
         # loads data from the database
         with MongoDB() as mongo_db:
             # todo filter ceux non utilisé pour des clips
@@ -418,7 +418,7 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
 
     rearrange(clips, key="broadcaster_name")
 
-    for clip in clips:
+    for clip in clips[:3]:
         # retrieves clip url and downloads clip file
         temporary_file: str = get_url_content(clip["clip_url"])
         broadcaster_name: str = clip["broadcaster_name"]
@@ -522,7 +522,7 @@ def edit(*, _input: Optional[str] = None, output: Optional[str] = None):
 
         write_video(subclips, local_file)
 
-    print("edit", _input, output)
+    print("edit", input, output)
     # TODO laoder
 
 

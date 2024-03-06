@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 import webbrowser
@@ -5,7 +6,9 @@ from enum import Enum
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
 
+import requests
 from requests import HTTPError
+from requests_toolbelt import MultipartEncoder
 
 from compyle.services.common import Routable
 from compyle.settings import YOUTUBE_CONFIG
@@ -263,7 +266,6 @@ class YoutubeAPI(Routable):
                 "status": {
                     "privacyStatus": PrivacyStatus.PRIVATE.value,
                     "embeddable": True,
-                    "license": "youtube",
                 },
             }
 
@@ -299,26 +301,62 @@ class YoutubeAPI(Routable):
         exit(0)
 
     def test(self, filename: str, title: str, description: str, category: str, tags: list[str] | None = None):
-        with open(filename, "rb") as file:
-            header = self.__request_header()
-            header["Content-Type"] = "video/mp4"
-            header["Content-Length"] = str(os.fstat(file.fileno()).st_size)
+        params = {"part": "snippet,status", "uploadType": "multipart", "notifySubscribers": True}
+        metadata = {
+            "snippet": {
+                "title": title,
+                "description": description,
+                "tags": tags or [],
+                "categoryId": category,
+                "thumbnails": {},
+            },
+            "status": {
+                "privacyStatus": PrivacyStatus.PRIVATE.value,
+            },
+        }
 
-            params = {"part": "snippet,status,contentDetails", "notifySubscribers": True}
-            body = {
-                "snippet": {
-                    "title": title,
-                    "description": description,
-                    "tags": tags or [],
-                    "categoryId": category,
-                    "thumbnails": {},
-                },
-                "status": {
-                    "privacyStatus": PrivacyStatus.PRIVATE.value,
-                },
+        multipart_encoder = MultipartEncoder(
+            fields={
+                "metadata": (None, json.dumps(metadata), "application/json"),
+                "file": (filename, open(filename, "rb"), "video/mp4"),
             }
-            files = {"file": file}
-            response = self.router.request("POST", "upload", header, body, files, **params)
-            print(response)
-        # TODO resumable upload
+        )
+
+        header = self.__request_header()
+        # header["Content-Length"] = str(sys.getsizeof(metadata))
+        # header["Content-Type"] = "application/json; charset=UTF-8"
+
+        # header["X-Upload-Content-Length"] = str(os.fstat(file.fileno()).st_size)  # the size of the video in bytes
+        #   header["X-Upload-Content-Type"] = "video/mp4"
+
+        # header["X-Upload-Content-Length"] = str(multipart_encoder.len) # 105310011
+        # 105309722
+
+        # x = str(os.fstat(multipart_encoder.fields["file"][1]).st_size)
+        # header["X-Upload-Content-Type"] = multipart_encoder.content_type
+
+        header["Content-Type"] = multipart_encoder.content_type
+        header["Content-Length"] = str(multipart_encoder.len)
+
+        response = self.router.request(
+            "POST", "resumable_upload", header, body=multipart_encoder, **params, return_json=False
+        )
+        print(response)
         # https://developers.google.com/youtube/v3/guides/using_resumable_upload_protocol?hl=fr
+
+        # https://developers.google.com/youtube/v3/guides/using_resumable_upload_protocol?hl=fr#Resume_Upload
+        # location_header = response.headers['Location']
+
+        # range_start = 0
+        # range_end = 50 * 1024 * 1024 - 1 # 50 MB
+        # range_headers = {
+        #     "Content-Range": f"bytes {range_start}-{range_end}/{len(multipart_encoder)}",
+        #     "Content-Length": str(range_end - range_start + 1)
+        # }
+
+        # # Make the request to complete the resumable upload
+        # response = requests.put(location_header, headers={**header, **range_headers}, data=multipart_encoder[range_start:range_end+1])
+
+        # Make the request to complete the resumable upload
+        # TODO via url location_header
+        # response = self.router.requests("PUT", "resumable_upload", location_header, headers=headers, data=multipart_encoder)

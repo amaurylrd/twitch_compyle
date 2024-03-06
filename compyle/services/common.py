@@ -291,6 +291,7 @@ class Router:
                 response.raise_for_status()
                 return response
             except requests.exceptions.RequestException as error:
+                print(error.response.text)
                 raise error
 
     # pylint: too-many-arguments
@@ -299,7 +300,7 @@ class Router:
         method: str,
         namespace: str,
         header: dict[str, str] | None = None,
-        body: dict[str, Any] | None = None,
+        body: str | None = None,
         files: dict[str, BufferedReader] | None = None,
         *,
         return_json: bool = True,
@@ -311,7 +312,7 @@ class Router:
             method (str): the HTTP method to be used.
             namespace (str): the namespace to be fetched.
             header (dict[str, str], optional): the header to be used for the HTTP request. Defaults to None.
-            body (dict[str, Any], optional): the body to be used for the HTTP request. Defaults to None.
+            body (str, optional): the body to be used for the HTTP request. Defaults to None.
             files (dict[str, BufferedReader], optional): the files to be used for the HTTP request. Defaults to None.
             return_json (bool, optional): flag to tell if the response is decoded to JSON. Defaults to True.
             **params: the additional parameters to be used for the HTTP request.
@@ -326,12 +327,13 @@ class Router:
         if method not in Method.__members__:
             raise ValueError(f"Invalid method {method}, expected one of {Method.__members__.keys()}")
 
+        if files and body:
+            raise ValueError("Cannot send both files and body in the same request")
+
         if method in (Method.GET.name, Method.HEAD.name):
             response = self.__request_with_retry(method, self.route(namespace, **params), headers=header)
         else:
-            response = self.__request_with_retry(
-                method, self.route(namespace, **params), headers=header, data=body, files=files
-            )
+            response = self.__request_with_retry(method, self.route(namespace, **params), headers=header, data=body)
 
         return response.json() if return_json else response
 

@@ -180,13 +180,16 @@ class TwitchAPI(Routable):
             list[Any]: the list of clips if the response was a success.
         """
         # date format is RFC3339 like yyyy-MM-ddTHH:mm:ssZ
-        started_at = datetime.datetime.utcnow() - datetime.timedelta(days=max(1, period))
+        end_date = datetime.datetime.utcnow()
+        started_at = end_date - datetime.timedelta(days=max(1, period))
 
         header = self.__request_header()
         params = {
             "game_id": game_id,
-            "first": str(max(1, min(limit, 100))),
+            "first": str(max(1, limit)),
             "started_at": started_at.isoformat("T") + "Z",
+            "ended_at": end_date.isoformat("T") + "Z",
+            "sort": "views",
         }
 
         return self.__parse_clips(header, params)
@@ -221,8 +224,8 @@ class TwitchAPI(Routable):
             # parses the clips and filters them with the specified criteria
             for clip in response["data"]:
                 # skips the clip if the broadcaster is in the blacklist
-                if clip["broadcaster_id"] in blacklist:
-                    continue
+                # if clip["broadcaster_id"] in blacklist:
+                #     continue
 
                 # stops the parsing if the clips have too low view_count of clips is reached
                 if clip["view_count"] < min_views:
@@ -230,14 +233,14 @@ class TwitchAPI(Routable):
 
                 if (
                     # checks if the broadcaster is in the whitelist
-                    clip["broadcaster_id"] in whitelist
+                    # clip["broadcaster_id"] in whitelist
                     # checks if the video is available
-                    or clip["video_id"] != ""
-                    and clip["vod_offset"] is not None
+                    # clip["video_id"] != "" # TODO use /videos
+                    # and clip["vod_offset"] is not None
                     # checks if the clip language is the specified one, if any specified all languages are valid
-                    and (not language or clip["language"] == language)
+                    clip["language"] == language
                     # checks if the clip duration is between the specified bounds
-                    and round(min_duration, 1) <= clip["duration"] < round(max_duration, 1)
+                    and min_duration <= clip["duration"] <= max_duration
                 ):
                     # checks if the video the clip is from is not already in the list from the vod_offset
                     if not any(
@@ -256,10 +259,15 @@ class TwitchAPI(Routable):
                         if max_clips and len(clips) == max_clips:
                             break
 
-            params["after"] = response["pagination"]["cursor"]
+            params["after"] = response["pagination"].get("cursor")
+            if params["after"] is None:
+                break
 
         # sorts the clips by view count and creation date
-        clips.sort(key=lambda clip: (clip["view_count"], clip["created_at"]), reverse=True)
+        clips.sort(
+            key=lambda clip: (clip["view_count"], datetime.datetime.strptime(clip["created_at"], "%Y-%m-%dT%H:%M:%SZ")),
+            reverse=True,
+        )
 
         return clips
 
