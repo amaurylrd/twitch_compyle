@@ -59,7 +59,7 @@ mypy = "^1.1"
 toml = "^0.10.2"
 
 [tool.poetry.group.doc.dependencies]
-pdoc = "14.6.0"
+pdoc = "14.6.1"
 
 [tool.poetry.group.test.dependencies]
 coverage = "^7.3.1"

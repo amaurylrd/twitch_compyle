@@ -1149,13 +1149,13 @@ files = [
 
 [[package]]
 name = "pdoc"
-version = "14.6.0"
+version = "14.6.1"
 description = "API Documentation for Python Projects"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pdoc-14.6.0-py3-none-any.whl", hash = "sha256:36c42c546a317d8e3e8c0b39645f24161374de0c7066ccaae76628d721e49ba5"},
-    {file = "pdoc-14.6.0.tar.gz", hash = "sha256:6e98a24c5e0ca5d188397969cf82581836eaef13f172fc3820047bfe15c61c9a"},
+    {file = "pdoc-14.6.1-py3-none-any.whl", hash = "sha256:efbed433655264392c60551615a3d42b8f21e492373419756d20234c667b54bc"},
+    {file = "pdoc-14.6.1.tar.gz", hash = "sha256:ee598f30d5c55dd4702086dabc412a26022acc35aa88aa382cda8ac655fead98"},
 ]
 
 [package.dependencies]
@@ -2684,4 +2684,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.12.0"
-content-hash = "22aefc68927893b8e73c09cd04a16e02e8e42bd70acd4ff6403e9a1040cea155"
+content-hash = "7f632c3a967ef54a57adbf15c156349389db5103fc5627000c6049c4997fd856"
