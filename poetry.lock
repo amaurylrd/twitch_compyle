@@ -276,6 +276,26 @@ files = [
 colorama = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
+name = "click-option-group"
+version = "0.5.7"
+description = "Option groups missing in Click"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "click_option_group-0.5.7-py3-none-any.whl", hash = "sha256:96b9f52f397ef4d916f81929bd6c1f85e89046c7a401a64e72a61ae74ad35c24"},
+    {file = "click_option_group-0.5.7.tar.gz", hash = "sha256:8dc780be038712fc12c9fecb3db4fe49e0d0723f9c171d7cda85c20369be693c"},
+]
+
+[package.dependencies]
+click = ">=7.0"
+
+[package.extras]
+dev = ["pre-commit", "pytest"]
+docs = ["m2r2", "pallets-sphinx-themes", "sphinx"]
+test = ["pytest"]
+test-cov = ["pytest", "pytest-cov"]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 description = "Cross-platform colored terminal text."
@@ -375,6 +395,23 @@ files = [
     {file = "decorator-4.4.2-py2.py3-none-any.whl", hash = "sha256:41fa54c2a0cc4ba648be4fd43cff00aedf5b9465c9bf18d64325bc225f08f760"},
     {file = "decorator-4.4.2.tar.gz", hash = "sha256:e3a62f0520172440ca0dcc823749319382e377f37f140a0b99ef45fecb84bfe7"},
 ]
+
+[[package]]
+name = "deprecated"
+version = "1.2.18"
+description = "Python @deprecated decorator to deprecate old python classes, functions or methods."
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
+files = [
+    {file = "Deprecated-1.2.18-py2.py3-none-any.whl", hash = "sha256:bd5011788200372a32418f888e326a09ff80d0214bd961147cfed01b5c018eec"},
+    {file = "deprecated-1.2.18.tar.gz", hash = "sha256:422b6f6d859da6f2ef57857761bfb392480502a64c3028ca9bbe86085d72115d"},
+]
+
+[package.dependencies]
+wrapt = ">=1.10,<2"
+
+[package.extras]
+dev = ["PyTest", "PyTest-Cov", "bump2version (<1)", "setuptools", "tox"]
 
 [[package]]
 name = "dill"
@@ -1675,33 +1712,36 @@ yaml = ["PyYaml (>=6.0.1)"]
 
 [[package]]
 name = "python-semantic-release"
-version = "8.7.0"
+version = "9.21.1"
 description = "Automatic Semantic Versioning for Python projects"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "python-semantic-release-8.7.0.tar.gz", hash = "sha256:6bbd11b1e8ac70e0946ed6d257094c851b2507edfbc393eef6093d0ed1dbe0b4"},
-    {file = "python_semantic_release-8.7.0-py3-none-any.whl", hash = "sha256:a016b1cf43a5f3667ce2cfddd8e30b6210a2d52b0e2f6b487aae1164f2540eaa"},
+    {file = "python_semantic_release-9.21.1-py3-none-any.whl", hash = "sha256:e69afe5100106390eec9e800132c947ed774bdcf9aa8f0df29589ea9ef375a21"},
+    {file = "python_semantic_release-9.21.1.tar.gz", hash = "sha256:b5c509a573899e88e8f29504d2f83e9ddab9a66af861ec1baf39f2b86bbf3517"},
 ]
 
 [package.dependencies]
-click = ">=8,<9"
-dotty-dict = ">=1.3.0,<2"
-gitpython = ">=3.0.8,<4"
-importlib-resources = ">=5.7,<7"
-jinja2 = ">=3.1.2,<4"
-pydantic = ">=2,<3"
-python-gitlab = ">=2,<5"
-requests = ">=2.25,<3"
-rich = ">=12.5.1"
-shellingham = ">=1.5.0.post1"
-tomlkit = ">=0.10,<1.0"
+click = ">=8.0,<9.0"
+click-option-group = ">=0.5,<1.0"
+Deprecated = ">=1.2,<2.0"
+dotty-dict = ">=1.3,<2.0"
+gitpython = ">=3.0,<4.0"
+importlib-resources = ">=6.0,<7.0"
+jinja2 = ">=3.1,<4.0"
+pydantic = ">=2.0,<3.0"
+python-gitlab = ">=4.0.0,<6.0.0"
+requests = ">=2.25,<3.0"
+rich = ">=14.0,<15.0"
+shellingham = ">=1.5,<2.0"
+tomlkit = ">=0.11,<1.0"
 
 [package.extras]
-dev = ["pre-commit", "ruff (==0.1.8)", "tox"]
-docs = ["Sphinx (<=6.0.0)", "furo (>=2023.3.27)", "sphinx-autobuild (==2021.03.14)", "sphinxcontrib-apidoc (==0.3.0)"]
-mypy = ["mypy", "types-requests"]
-test = ["coverage[toml] (>=6,<8)", "pytest (>=7,<8)", "pytest-clarity (>=1.0.1)", "pytest-cov (>=4,<5)", "pytest-lazy-fixture (>=0.6.3,<0.7.0)", "pytest-mock (>=3,<4)", "pytest-pretty (>=1.2.0,<2)", "pytest-xdist (>=2,<4)", "requests-mock (>=1.10.0,<2)", "responses (==0.23.3)", "types-pytest-lazy-fixture (>=0.6.3.3)"]
+build = ["build (>=1.2,<2.0)"]
+dev = ["pre-commit (>=3.5,<4.0)", "ruff (==0.6.1)", "tox (>=4.11,<5.0)"]
+docs = ["Sphinx (>=6.0,<7.0)", "furo (>=2024.1,<2025.0)", "sphinx-autobuild (==2024.2.4)", "sphinxcontrib-apidoc (==0.5.0)"]
+mypy = ["mypy (==1.15.0)", "types-Deprecated (>=1.2,<2.0)", "types-pyyaml (>=6.0,<7.0)", "types-requests (>=2.32.0,<2.33.0)"]
+test = ["coverage[toml] (>=7.0,<8.0)", "filelock (>=3.15,<4.0)", "flatdict (>=4.0,<5.0)", "freezegun (>=1.5,<2.0)", "pytest (>=8.3,<9.0)", "pytest-clarity (>=1.0,<2.0)", "pytest-cov (>=5.0.0,<7.0.0)", "pytest-env (>=1.0,<2.0)", "pytest-lazy-fixtures (>=1.1.1,<1.2.0)", "pytest-mock (>=3.0,<4.0)", "pytest-order (>=1.3,<2.0)", "pytest-pretty (>=1.2,<2.0)", "pytest-xdist (>=3.0,<4.0)", "pyyaml (>=6.0,<7.0)", "requests-mock (>=1.10,<2.0)", "responses (>=0.25.0,<0.26.0)"]
 
 [[package]]
 name = "pyyaml"
@@ -2589,4 +2629,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.13.0"
-content-hash = "e1ffbe00ac3d0289fe1523a515ea9fa44a1d7276b5bfb84c69a2837228f072e1"
+content-hash = "96591d2ac5daf96be08acfe818eb1ca4e06cc67dc5a2d70178055a6cfe28ee59"
