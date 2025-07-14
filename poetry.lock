@@ -24,13 +24,13 @@ files = [
 
 [[package]]
 name = "asgiref"
-version = "3.9.0"
+version = "3.9.1"
 description = "ASGI specs, helper code, and adapters"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "asgiref-3.9.0-py3-none-any.whl", hash = "sha256:06a41250a0114d2b6f6a2cb3ab962147d355b53d1de15eebc34a9d04a7b79981"},
-    {file = "asgiref-3.9.0.tar.gz", hash = "sha256:3dd2556d0f08c4fab8a010d9ab05ef8c34565f6bf32381d17505f7ca5b273767"},
+    {file = "asgiref-3.9.1-py3-none-any.whl", hash = "sha256:f3bba7092a48005b5f5bacd747d36ee4a5a61f4a269a6df590b43144355ebd2c"},
+    {file = "asgiref-3.9.1.tar.gz", hash = "sha256:a5ab6582236218e5ef1648f242fd9f10626cfd4de8dc377db215d5d5098e3142"},
 ]
 
 [package.extras]
@@ -140,13 +140,13 @@ uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "certifi"
-version = "2025.6.15"
+version = "2025.7.9"
 description = "Python package for providing Mozilla's CA Bundle."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "certifi-2025.6.15-py3-none-any.whl", hash = "sha256:2e0c7ce7cb5d8f8634ca55d2ba7e6ec2689a2fd6537d8dec1296a477a4910057"},
-    {file = "certifi-2025.6.15.tar.gz", hash = "sha256:d747aa5a8b9bbbb1bb8c22bb13e22bd1f18e9796defa16bab421f7f7a317323b"},
+    {file = "certifi-2025.7.9-py3-none-any.whl", hash = "sha256:d842783a14f8fdd646895ac26f719a061408834473cfc10203f6a575beb15d39"},
+    {file = "certifi-2025.7.9.tar.gz", hash = "sha256:c1d2ec05395148ee10cf672ffc28cd37ea0ab0d99f9cc74c43e588cbd111b079"},
 ]
 
 [[package]]
@@ -603,13 +603,13 @@ tests = ["pytest"]
 
 [[package]]
 name = "huggingface-hub"
-version = "0.33.2"
+version = "0.33.4"
 description = "Client library to download and publish models, datasets and other repos on the huggingface.co hub"
 optional = false
 python-versions = ">=3.8.0"
 files = [
-    {file = "huggingface_hub-0.33.2-py3-none-any.whl", hash = "sha256:3749498bfa91e8cde2ddc2c1db92c79981f40e66434c20133b39e5928ac9bcc5"},
-    {file = "huggingface_hub-0.33.2.tar.gz", hash = "sha256:84221defaec8fa09c090390cd68c78b88e3c4c2b7befba68d3dc5aacbc3c2c5f"},
+    {file = "huggingface_hub-0.33.4-py3-none-any.whl", hash = "sha256:09f9f4e7ca62547c70f8b82767eefadd2667f4e116acba2e3e62a5a81815a7bb"},
+    {file = "huggingface_hub-0.33.4.tar.gz", hash = "sha256:6af13478deae120e765bfd92adad0ae1aec1ad8c439b46f23058ad5956cbca0a"},
 ]
 
 [package.dependencies]
@@ -2436,24 +2436,24 @@ files = [
 
 [[package]]
 name = "types-markdown"
-version = "3.8.0.20250415"
+version = "3.8.0.20250708"
 description = "Typing stubs for Markdown"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "types_markdown-3.8.0.20250415-py3-none-any.whl", hash = "sha256:b41abed474a303ba300e3a4cf6f27eda339219124a59d529a158203570007776"},
-    {file = "types_markdown-3.8.0.20250415.tar.gz", hash = "sha256:98ab13587d1177769d93e55586d3dc97047df75bc6e37ce4074666f5dd4212ba"},
+    {file = "types_markdown-3.8.0.20250708-py3-none-any.whl", hash = "sha256:d1f634931b463adf7603c012724b7e9e5eff976eb517dc700ebece2d6189b1ce"},
+    {file = "types_markdown-3.8.0.20250708.tar.gz", hash = "sha256:28690251fe90757f5a99cd671c79502bc2de07aef2d35fe54117c3b1c799804a"},
 ]
 
 [[package]]
 name = "types-python-dateutil"
-version = "2.9.0.20250516"
+version = "2.9.0.20250708"
 description = "Typing stubs for python-dateutil"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "types_python_dateutil-2.9.0.20250516-py3-none-any.whl", hash = "sha256:2b2b3f57f9c6a61fba26a9c0ffb9ea5681c9b83e69cd897c6b5f668d9c0cab93"},
-    {file = "types_python_dateutil-2.9.0.20250516.tar.gz", hash = "sha256:13e80d6c9c47df23ad773d54b2826bd52dbbb41be87c3f339381c1700ad21ee5"},
+    {file = "types_python_dateutil-2.9.0.20250708-py3-none-any.whl", hash = "sha256:4d6d0cc1cc4d24a2dc3816024e502564094497b713f7befda4d5bc7a8e3fd21f"},
+    {file = "types_python_dateutil-2.9.0.20250708.tar.gz", hash = "sha256:ccdbd75dab2d6c9696c350579f34cffe2c281e4c5f27a585b2a2438dd1d5c8ab"},
 ]
 
 [[package]]
