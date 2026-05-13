@@ -2246,13 +2246,13 @@ files = [
 
 [[package]]
 name = "requests"
-version = "2.34.0"
+version = "2.34.1"
 description = "Python HTTP for Humans."
 optional = false
 python-versions = ">=3.10"
 files = [
-    {file = "requests-2.34.0-py3-none-any.whl", hash = "sha256:917520a21b767485ce7c588f4ebb917c436b24a31231b44228715eaeb5a52c60"},
-    {file = "requests-2.34.0.tar.gz", hash = "sha256:7d62fe92f50eb82c529b0916bb445afa1531a566fc8f35ffdc64446e771b856a"},
+    {file = "requests-2.34.1-py3-none-any.whl", hash = "sha256:bf38a3ff993960d3dd819c08862c40b3c703306eb7c744fcd9f4ddbb95b548f0"},
+    {file = "requests-2.34.1.tar.gz", hash = "sha256:0fc5669f2b69704449fe1552360bd2a73a54512dfd03e65529157f1513322beb"},
 ]
 
 [package.dependencies]
@@ -2927,4 +2927,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.13.0"
-content-hash = "7bf4606ed9ee0eee01d10b6d5089a5709754a81ef4faa1f705fe6286f9b50c33"
+content-hash = "dd8dc599346dde1d89591211f8482d092ec28ed533082ca87c24940c00bd817b"
